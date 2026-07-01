@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Music - Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <h1 class="navbar-title">🎵 My Music</h1>
+            <div class="navbar-search">
+                <input type="text" id="searchInput" class="search-bar" placeholder="Search for artists, songs, or playlists" oninput="searchSongs()">
+            </div>
+            <div class="navbar-buttons">
+                <button class="btn-secondary" onclick="openFavorites()">❤️ Favorites</button>
+                <button class="btn-secondary" onclick="openSettings()">⚙️ Settings</button>
+                <button class="btn-secondary" onclick="logout()">🚪 Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Welcome Message -->
+        <div id="welcomeSection" style="background: #1e1e1e; padding: 20px; border-radius: 10px; border-left: 4px solid #1db954; margin-bottom: 30px; display: none;">
+            <h3 style="color: #1db954; margin-bottom: 5px;">Welcome back! 👋</h3>
+            <p style="color: #b3b3b3;">You are logged in as: <span id="userFullName" style="color: #1db954; font-weight: 600;"></span></p>
+        </div>
+
+        <!-- Recent Activity -->
+        <div id="recentSection" class="recent-section" style="display: none; margin-bottom: 30px;">
+            <h2>Recents</h2>
+            <div class="recent-songs-queue" id="recentSongsQueue"></div>
+        </div>
+
+        <!-- Playlist Section -->
+        <div id="playlistSection">
+            <h2>Songs</h2>
+            <div id="playlistContainer" class="playlist-container"></div>
+            <h2 id="userPlaylistHeading" style="display:none;">Playlists</h2>
+            <div id="userPlaylistContainer" class="playlist-container"></div>
+        </div>
+
+        <!-- Songs Section -->
+        <div id="songsSection" style="display: none;">
+            <div class="songs-header">
+                <button class="btn-back" onclick="goHome()">← Back to Playlists</button>
+                <h2 id="playlistTitle"></h2>
+            </div>
+            <div id="songList" class="song-list"></div>
+        </div>
+
+        <!-- Favorites Section -->
+        <div id="favoritesSection" style="display: none; margin-bottom: 30px;">
+            <div class="songs-header">
+                <button class="btn-back" onclick="goHome()">← Back to Playlists</button>
+                <h2>❤️ Favorite Songs</h2>
+            </div>
+            <div id="favoriteSongList" class="song-list"></div>
+        </div>
+
+        <!-- Search Results Section -->
+        <div id="searchResults" class="no-results" style="display: none;">
+            No Results Found
+        </div>
+
+        <!-- Hidden soundCloudPlayer (used for SoundCloud iframe) -->
+        <div id="soundCloudPlayer" style="display:none;"></div>
+
+        <!-- Hidden audio element for local playback -->
+        <audio id="hiddenAudio" style="display:none;"></audio>
+
+        <!-- Mini Player (fixed bottom) -->
+        <div class="mini-player" id="miniPlayer" style="display:none;" onclick="openFullscreenPlayer()">
+            <div class="mini-player-left" onclick="event.stopPropagation(); openFullscreenPlayer()">
+                <div class="mini-player-img" id="miniPlayerImg">🎵</div>
+                <div class="mini-player-info">
+                    <div class="mini-player-title" id="miniPlayerTitle">No song playing</div>
+                    <div class="mini-player-artist" id="miniPlayerArtist">My Music</div>
+                </div>
+            </div>
+            <div class="mini-player-center">
+                <div class="mini-player-controls" onclick="event.stopPropagation()">
+                    <button class="mini-ctrl-btn" onclick="toggleShuffle()" id="shuffleBtn" title="Shuffle">🔀</button>
+                    <button class="mini-ctrl-btn" onclick="playPrevious()" title="Previous">⏮</button>
+                    <button class="mini-ctrl-btn seek10-btn" onclick="skipBack10()" title="Back 10s">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M18 15 A 7 7 0 0 0 12 5" stroke="currentColor" fill="none" stroke-linecap="round"/>
+                            <path d="M12 5 l -2 -1.5 M12 5 l -2 1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            <text x="12" y="14.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="currentColor" stroke="none">10</text>
+                        </svg>
+                    </button>
+                    <button class="mini-ctrl-btn mini-play-btn" onclick="togglePlayPause()" id="playPauseBtn" title="Play/Pause">▶️</button>
+                    <button class="mini-ctrl-btn seek10-btn" onclick="skipForward10()" title="Forward 10s">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M6 15 A 7 7 0 0 1 12 5" stroke="currentColor" fill="none" stroke-linecap="round"/>
+                            <path d="M12 5 l 2 -1.5 M12 5 l 2 1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            <text x="12" y="14.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="currentColor" stroke="none">10</text>
+                        </svg>
+                    </button>
+                    <button class="mini-ctrl-btn" onclick="playNext()" title="Next">⏭</button>
+                    <button class="mini-ctrl-btn" onclick="toggleRepeat()" id="repeatBtn" title="Repeat">🔁</button>
+                    <button class="mini-ctrl-btn" onclick="toggleFavorite()" id="miniFavBtn" title="Favorite">♡</button>
+                    <button class="mini-ctrl-btn" onclick="toggleMiniMenu(event)" id="miniDotsBtn" title="More">⋮</button>
+                    <div id="miniMenuDropdown" class="mini-menu-dropdown" style="display:none;">
+                        <div class="menu-item" onclick="toggleMiniPlaylistSubmenu()">Add to Playlist ▸</div>
+                        <div id="miniSubPlaylistList" class="submenu" style="display:none;"></div>
+                        <div style="border-top:1px solid #404040;margin:4px 0;"></div>
+                        <div class="menu-item" onclick="downloadCurrentSong()">Download</div>
+                        <div class="menu-item" onclick="toggleMiniSpeedSubmenu()">Play Speed ▸</div>
+                        <div id="miniSpeedSubmenu" class="submenu" style="display:none;">
+                            <div class="menu-item" onclick="setPlaySpeed(0.5)">0.5x</div>
+                            <div class="menu-item" onclick="setPlaySpeed(0.75)">0.75x</div>
+                            <div class="menu-item" onclick="setPlaySpeed(1)">1x</div>
+                            <div class="menu-item" onclick="setPlaySpeed(1.25)">1.25x</div>
+                            <div class="menu-item" onclick="setPlaySpeed(1.5)">1.5x</div>
+                            <div class="menu-item" onclick="setPlaySpeed(2)">2x</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mini-player-progress" onclick="event.stopPropagation()">
+                    <span class="progress-time" id="currentTimeDisplay">0:00</span>
+                    <div class="progress-bar" id="progressBar" onclick="seekTo(event)">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <span class="progress-time" id="durationDisplay">0:00</span>
+                </div>
+            </div>
+            <div class="mini-player-right" onclick="event.stopPropagation()">
+                <div class="volume-control" onclick="event.stopPropagation()">
+                    <button class="mini-ctrl-btn" onclick="toggleMute()" id="muteBtn" title="Mute">🔊</button>
+                    <div class="volume-slider" onclick="event.stopPropagation()">
+                        <div class="volume-bar" id="volumeBar" onclick="setVolumeFromClick(event)">
+                            <div class="volume-fill" id="volumeFill" style="width:70%"></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="mini-ctrl-btn" onclick="event.stopPropagation(); openFullscreenPlayer()" title="Open full player">⏏</button>
+            </div>
+        </div>
+
+        <!-- Fullscreen Player Overlay -->
+        <div class="fullscreen-player" id="fullscreenPlayer" style="display:none;" onclick="closeFullscreenPlayer(event)">
+            <div class="fullscreen-content" onclick="event.stopPropagation()">
+                <div class="fullscreen-top-bar">
+                    <button class="fullscreen-close" onclick="closeFullscreenPlayer()">✕</button>
+                    <div class="fullscreen-top-right">
+                        <button class="fs-extra-btn fs-heart-btn" onclick="toggleFavorite()" id="fsFavBtn" title="Favorite">♡</button>
+                        <button class="fs-extra-btn fs-dots-btn" onclick="toggleFullscreenMenu(event)" id="fsDotsBtn" title="More">⋮</button>
+                    </div>
+                </div>
+                <div class="fullscreen-art" id="fullscreenArt">🎵</div>
+                <div class="fullscreen-info">
+                    <div class="fullscreen-title" id="fullscreenTitle">No song playing</div>
+                    <div class="fullscreen-artist" id="fullscreenArtist">My Music</div>
+                </div>
+                <div class="fullscreen-progress">
+                    <span class="progress-time" id="fsCurrentTime">0:00</span>
+                    <div class="progress-bar fs-progress-bar" id="fsProgressBar" onclick="seekTo(event)">
+                        <div class="progress-fill" id="fsProgressFill"></div>
+                    </div>
+                    <span class="progress-time" id="fsDuration">0:00</span>
+                </div>
+                <div class="fullscreen-controls">
+                    <button class="fs-ctrl-btn" onclick="toggleShuffle()" id="fsShuffleBtn" title="Shuffle">🔀</button>
+                    <button class="fs-ctrl-btn" onclick="playPrevious()" title="Previous">⏮</button>
+                    <button class="fs-ctrl-btn seek10-btn" onclick="skipBack10()" title="Back 10s">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M18 15 A 7 7 0 0 0 12 5" stroke="currentColor" fill="none" stroke-linecap="round"/>
+                            <path d="M12 5 l -2 -1.5 M12 5 l -2 1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            <text x="12" y="14.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="currentColor" stroke="none">10</text>
+                        </svg>
+                    </button>
+                    <button class="fs-ctrl-btn fs-play-btn" onclick="togglePlayPause()" id="fsPlayPauseBtn" title="Play/Pause">▶️</button>
+                    <button class="fs-ctrl-btn seek10-btn" onclick="skipForward10()" title="Forward 10s">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M6 15 A 7 7 0 0 1 12 5" stroke="currentColor" fill="none" stroke-linecap="round"/>
+                            <path d="M12 5 l 2 -1.5 M12 5 l 2 1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                            <text x="12" y="14.5" text-anchor="middle" font-size="5.5" font-weight="800" fill="currentColor" stroke="none">10</text>
+                        </svg>
+                    </button>
+                    <button class="fs-ctrl-btn" onclick="playNext()" title="Next">⏭</button>
+                    <button class="fs-ctrl-btn" onclick="toggleRepeat()" id="fsRepeatBtn" title="Repeat">🔁</button>
+                </div>
+                <div class="fullscreen-extras">
+                    <div class="fs-volume">
+                        <button class="fs-extra-btn" onclick="toggleMute()" id="fsMuteBtn" title="Mute">🔊</button>
+                        <div class="volume-slider">
+                            <div class="volume-bar" id="fsVolumeBar" onclick="setVolumeFromClick(event)">
+                                <div class="volume-fill" id="fsVolumeFill" style="width:70%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Fullscreen Menu Dropdown -->
+            <div id="fsMenuDropdown" class="fs-menu-dropdown" style="display:none;">
+                <div class="menu-item" onclick="toggleFsPlaylistSubmenu()">Add to Playlist ▸</div>
+                <div id="fsSubPlaylistList" class="submenu" style="display:none;"></div>
+                <div style="border-top:1px solid #404040;margin:4px 0;"></div>
+                <div class="menu-item" onclick="fsDownloadCurrentSong()">Download</div>
+                <div class="menu-item" onclick="toggleFsSpeedSubmenu()">Play Speed ▸</div>
+                <div id="fsSpeedSubmenu" class="submenu" style="display:none;">
+                    <div class="menu-item" onclick="setPlaySpeedFromFs(0.5)">0.5x</div>
+                    <div class="menu-item" onclick="setPlaySpeedFromFs(0.75)">0.75x</div>
+                    <div class="menu-item" onclick="setPlaySpeedFromFs(1)">1x</div>
+                    <div class="menu-item" onclick="setPlaySpeedFromFs(1.25)">1.25x</div>
+                    <div class="menu-item" onclick="setPlaySpeedFromFs(1.5)">1.5x</div>
+                    <div class="menu-item" onclick="setPlaySpeedFromFs(2)">2x</div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Song Menu Dropdown -->
+    <div id="songMenuDropdown" class="song-menu-dropdown" style="display:none;">
+        <div class="menu-item" onclick="toggleSongPlaylistSubmenu()">+ Add to Playlist ▸</div>
+        <div id="songSubPlaylistList" class="submenu" style="display:none;"></div>
+        <div style="border-top:1px solid #404040;margin:4px 0;"></div>
+        <div class="menu-item" id="favMenuItem" onclick="toggleFavoriteFromMenu()">❤️ Add to Favourites</div>
+        <div style="border-top:1px solid #404040;margin:4px 0;"></div>
+        <div class="menu-item" id="removeFromPlaylistBtn" onclick="showDeleteSongConfirmation()" style="display:none;">🗑️ Delete Song</div>
+        <div class="menu-item" onclick="downloadCurrentSong()">Download</div>
+        <div class="menu-item" onclick="toggleSpeedSubmenu()">Play Speed ▸</div>
+        <div id="speedSubmenu" class="submenu" style="display:none;">
+            <div class="menu-item" onclick="setPlaySpeed(0.5)">0.5x</div>
+            <div class="menu-item" onclick="setPlaySpeed(0.75)">0.75x</div>
+            <div class="menu-item" onclick="setPlaySpeed(1)">1x</div>
+            <div class="menu-item" onclick="setPlaySpeed(1.25)">1.25x</div>
+            <div class="menu-item" onclick="setPlaySpeed(1.5)">1.5x</div>
+            <div class="menu-item" onclick="setPlaySpeed(2)">2x</div>
+        </div>
+    </div>
+
+    <!-- Player Dropdown -->
+    <div id="playerDropdown" class="player-dropdown" style="display:none;">
+        <div class="player-dropdown-item" onclick="openPlaylistPicker()">
+            <span class="player-dropdown-icon">+</span>
+            Add to Playlist
+        </div>
+    </div>
+
+    <!-- Playlist Card Dropdown -->
+    <div id="playlistCardDropdown" class="song-menu-dropdown" style="display:none;">
+        <div class="menu-item" onclick="playlistCardDelete()" style="color:#ff4444;">🗑️ Delete Playlist</div>
+    </div>
+
+    <!-- Playlist Action Modal (Delete Confirmation / Create Playlist) -->
+    <div id="playlistActionModal" class="modal-overlay" style="display:none;" onclick="closePlaylistActionModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width:380px;">
+            <div class="modal-header">
+                <h3 id="playlistActionTitle">Action</h3>
+                <button class="modal-close-btn" onclick="closePlaylistActionModal()">&times;</button>
+            </div>
+            <div id="playlistActionBody"></div>
+        </div>
+    </div>
+
+    <!-- Playlist Picker Modal -->
+    <div id="playlistPickerModal" class="modal-overlay" style="display:none;" onclick="closePlaylistPicker(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Add to Playlist</h3>
+                <button class="modal-close-btn" onclick="closePlaylistPicker()">&times;</button>
+            </div>
+            <div id="playlistPickerList" class="playlist-picker-list"></div>
+            <div class="create-playlist-input-wrapper">
+                <input type="text" id="newPlaylistInput" class="create-playlist-input" placeholder="+ Create new playlist..." onkeydown="handleCreatePlaylistKey(event)">
+                <button class="btn-create-playlist" onclick="handleCreatePlaylist()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Section -->
+    <div id="settingsSection" class="settings-section" style="display:none;">
+        <div class="songs-header">
+            <button class="btn-back" onclick="closeSettings()">← Back</button>
+            <h2>⚙️ Settings</h2>
+        </div>
+        <div id="settingsMainView">
+            <div id="profileSettingsItem" class="settings-item" style="cursor:default;border-color:var(--accent-color);margin-bottom:4px;">
+                <span id="profileSettingsIcon" class="settings-item-icon" style="font-size:2em;">👤</span>
+                <span id="profileSettingsName" class="settings-item-label" style="flex:none;font-size:1.1em;font-weight:600;"></span>
+            </div>
+            <div class="settings-item" onclick="showTimerView()">
+                <span class="settings-item-icon">⏱</span>
+                <span class="settings-item-label">Sleep Timer</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" onclick="showPlaylistView()">
+                <span class="settings-item-icon">🎵</span>
+                <span class="settings-item-label">Playlist Management</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" id="adminRequestsSettingsBtn" onclick="showAdminRequestsView()" style="display:none;">
+                <span class="settings-item-icon">👤</span>
+                <span class="settings-item-label">Admin Requests</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" id="songSettingsBtn" onclick="showSongSettingsView()" style="display:none;">
+                <span class="settings-item-icon">🎶</span>
+                <span class="settings-item-label">Song Settings</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" onclick="showAppearanceView()">
+                <span class="settings-item-icon">🎨</span>
+                <span class="settings-item-label">Appearance</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" onclick="showAccountPrivacyView()">
+                <span class="settings-item-icon">🔒</span>
+                <span class="settings-item-label">Account & Privacy</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="settings-item" onclick="showAboutView()">
+                <span class="settings-item-icon">ℹ️</span>
+                <span class="settings-item-label">About</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+        </div>
+        <div id="settingsTimerView" style="display:none;">
+            <div class="settings-back" onclick="showSettingsMain()">← Back</div>
+            <h4 class="settings-section-title">Sleep Timer</h4>
+            <p class="settings-section-desc">Stop playback after a set time.</p>
+            <div class="timer-presets">
+                <button class="timer-btn" onclick="startTimer(15, this)">15 min</button>
+                <button class="timer-btn" onclick="startTimer(20, this)">20 min</button>
+                <button class="timer-btn" onclick="startTimer(30, this)">30 min</button>
+            </div>
+            <div class="timer-custom">
+                <input type="number" id="customTimerInput" class="timer-custom-input" placeholder="Custom minutes..." min="1" max="999">
+                <button class="timer-btn timer-custom-go" onclick="startCustomTimer()">Set</button>
+            </div>
+            <div id="timerDisplay" class="timer-display" style="display:none;">
+                <div class="timer-countdown" id="timerCountdown">15:00</div>
+                <button class="timer-stop-btn" onclick="stopTimer()">Cancel Timer</button>
+            </div>
+        </div>
+        <div id="settingsPlaylistView" style="display:none;">
+            <div class="settings-back" onclick="showSettingsMain()">← Back</div>
+            <h4 class="settings-section-title" style="text-align: center;">🎵 Playlist Management</h4>
+            <p class="settings-section-desc" style="text-align: center;">Manage and organize your playlists with ease.</p>
+
+            <div class="settings-item" onclick="playAllPlaylistSongs()" style="flex-direction: column; text-align: center; gap: 4px; padding: 16px; margin-bottom: 8px;">
+                <div><span class="settings-item-icon">▶️</span> <span class="settings-item-label">Play Playlist</span></div>
+                <span style="color: #b3b3b3; font-size: 0.82em;">Start playing all songs in the selected playlist.</span>
+            </div>
+            <div class="settings-item" onclick="renameCurrentPlaylist()" style="flex-direction: column; text-align: center; gap: 4px; padding: 16px; margin-bottom: 8px;">
+                <div><span class="settings-item-icon">📝</span> <span class="settings-item-label">Rename Playlist</span></div>
+                <span style="color: #b3b3b3; font-size: 0.82em;">Change the playlist name anytime.</span>
+            </div>
+            <div class="settings-item" onclick="showPlaylistDetails()" style="flex-direction: column; text-align: center; gap: 4px; padding: 16px; margin-bottom: 8px;">
+                <div><span class="settings-item-icon">ℹ️</span> <span class="settings-item-label">Playlist Details</span></div>
+                <span style="color: #b3b3b3; font-size: 0.82em;">View playlist information including name, total songs, and creation date.</span>
+            </div>
+            <div class="settings-item" onclick="deleteCurrentPlaylist()" style="flex-direction: column; text-align: center; gap: 4px; padding: 16px; margin-bottom: 8px; border-color: #ff4444;">
+                <div><span class="settings-item-icon" style="color: #ff4444;">🗑️</span> <span class="settings-item-label" style="color: #ff4444;">Delete Playlist</span></div>
+                <span style="color: #ff4444; font-size: 0.82em;">Permanently remove the playlist from your library.</span>
+            </div>
+            <div style="margin-top: 16px; padding: 12px; background: #282828; border-radius: 8px; border-left: 3px solid #ff4444;">
+                <p style="color: #b3b3b3; font-size: 0.82em; line-height: 1.5;">
+                    <span style="color: #ff4444; font-weight: 600;">Note:</span>
+                    Deleting a playlist will not delete the songs from your music library. Only the playlist will be removed.
+                </p>
+            </div>
+        </div>
+        <div id="settingsAdminRequestsView" style="display:none;">
+            <div class="settings-back" onclick="showSettingsMain()">← Back</div>
+            <h4 class="settings-section-title" style="text-align: center;">👤 Admin Requests</h4>
+            <p class="settings-section-desc" style="text-align: center;">Review pending requests and manage all admins.</p>
+            <div id="adminRequestsList" style="margin-top:16px;"></div>
+        </div>
+        <div id="settingsSongSettingsView" style="display:none;">
+            <div class="settings-back" onclick="showSettingsMain()">← Back</div>
+            <h4 class="settings-section-title" style="text-align: center;">🎶 Song Settings</h4>
+            <p class="settings-section-desc" style="text-align: center;">Manage the song library. Add songs to any playlist.</p>
+            <div id="songSettingsCards">
+                <div class="settings-item" onclick="showAddSongForm()" style="flex-direction: column; text-align: center; gap: 2px; padding: 12px;">
+                    <div><span class="settings-item-icon">➕</span> <span class="settings-item-label">Add Song</span></div>
+                    <span style="color: #b3b3b3; font-size: 0.82em;">Upload an MP3 file, paste a web link, or a local file path.</span>
+                </div>
+                <div class="settings-item" onclick="showRemoveSongForm()" style="flex-direction: column; text-align: center; gap: 2px; padding: 12px;">
+                    <div><span class="settings-item-icon">🗑️</span> <span class="settings-item-label">Remove Song</span></div>
+                    <span style="color: #b3b3b3; font-size: 0.82em;">Remove a song from the music library.</span>
+                </div>
+                <div class="settings-item" onclick="showManageGlobalPlaylists()" style="flex-direction: column; text-align: center; gap: 2px; padding: 12px;">
+                    <div><span class="settings-item-icon">📋</span> <span class="settings-item-label">Playlist Manager</span></div>
+                    <span style="color: #b3b3b3; font-size: 0.82em;">Create or delete shared playlists visible to everyone.</span>
+                </div>
+            </div>
+            <!-- Add Song Form -->
+            <div id="addSongForm" style="display:none;">
+                <div style="background:#282828;border-radius:8px;padding:12px;border:1px solid #404040;">
+                    <div class="form-group" style="text-align:left;">
+                        <label style="color:#fff;display:block;margin-bottom:4px;font-size:0.85em;">Add to Playlist</label>
+                        <div style="position:relative;">
+                            <div onclick="togglePlaylistDropdown()" style="display:flex;align-items:center;justify-content:space-between;padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#b3b3b3;cursor:pointer;font-size:0.85em;">
+                                <span id="playlistDropdownLabel">Select playlists...</span>
+                                <span id="playlistDropdownArrow">▼</span>
+                            </div>
+                            <div id="newSongPlaylistCheckboxes" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:10;max-height:150px;overflow-y:auto;border:1px solid #404040;border-radius:0 0 6px 6px;padding:4px 8px;background:#333;margin-top:2px;"></div>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:8px;text-align:left;">
+                        <label for="newSongName" style="color:#fff;display:block;margin-bottom:4px;font-size:0.85em;">Song Title</label>
+                        <input type="text" id="newSongName" placeholder="Enter song title" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
+                    </div>
+                    <div class="form-group" style="margin-top:8px;text-align:left;">
+                        <label style="color:#fff;display:block;margin-bottom:4px;font-size:0.85em;">Song Source</label>
+                        <div style="display:flex;gap:8px;margin-bottom:8px;">
+                            <button onclick="setSongSource('file')" id="srcFileBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:var(--accent-color);color:#000;cursor:pointer;font-weight:600;">File</button>
+                            <button onclick="setSongSource('url')" id="srcUrlBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;cursor:pointer;">Link</button>
+                        </div>
+                        <div id="songFileGroup">
+                            <input type="file" id="newSongFile" accept=".mp3" style="color:#fff;width:100%;">
+                        </div>
+                        <div id="songUrlGroup" style="display:none;">
+                            <input type="text" id="newSongUrl" placeholder="Paste a web URL or local file path (e.g. C:\song.mp3)" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top:8px;text-align:left;">
+                        <label style="color:#fff;display:block;margin-bottom:4px;font-size:0.85em;">Image Source (optional)</label>
+                        <div style="display:flex;gap:8px;margin-bottom:8px;">
+                            <button onclick="setImageSource('url')" id="imgSrcUrlBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:var(--accent-color);color:#000;cursor:pointer;font-weight:600;">URL</button>
+                            <button onclick="setImageSource('file')" id="imgSrcFileBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;cursor:pointer;">File</button>
+                        </div>
+                        <div id="songImageUrlGroup">
+                            <input type="text" id="newSongImageUrl" placeholder="Paste image URL" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
+                        </div>
+                        <div id="songImageFileGroup" style="display:none;">
+                            <input type="file" id="newSongImageFile" accept="image/*" style="color:#fff;width:100%;">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;">
+                        <button onclick="document.getElementById('addSongForm').style.display='none';document.getElementById('songSettingsCards').style.display=''" class="timer-btn" style="flex:1;padding:8px;">Cancel</button>
+                        <button onclick="addSongToLibrary()" class="timer-btn" style="flex:1;background:var(--accent-color);color:#000;font-weight:600;padding:8px;">Add Song</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Remove Song Form -->
+            <div id="removeSongForm" style="display:none;">
+                <div style="background:#282828;border-radius:8px;padding:12px;border:1px solid #404040;">
+                    <p style="color:#b3b3b3;font-size:0.85em;margin-bottom:8px;text-align:center;">Select a song to remove from the library.</p>
+                    <select id="removeSongSelect" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;margin-bottom:8px;max-width:100%;width:100%;box-sizing:border-box;"></select>
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="document.getElementById('removeSongForm').style.display='none';document.getElementById('songSettingsCards').style.display=''" class="timer-btn" style="flex:1;padding:8px;">Cancel</button>
+                        <button onclick="removeSongFromLibrary()" class="timer-btn" style="flex:1;background:#ff4444;color:#fff;font-weight:600;padding:8px;">Remove Song</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Manage Shared Playlists -->
+            <div id="manageGlobalPlaylistsView" style="display:none;width:100%;">
+                <div style="background:#282828;border-radius:8px;padding:12px;border:1px solid #404040;">
+                    <p style="color:#b3b3b3;font-size:0.85em;margin-bottom:8px;text-align:center;">Shared playlists are visible to everyone.</p>
+                    <div id="globalPlaylistsList"></div>
+                    <div style="display:flex;gap:8px;margin-top:8px;">
+                        <button onclick="showCreateGlobalPlaylistForm()" class="timer-btn" style="flex:1;padding:8px;background:var(--accent-color);color:#000;font-weight:600;">+ New Playlist</button>
+                        <button onclick="document.getElementById('manageGlobalPlaylistsView').style.display='none';document.getElementById('songSettingsCards').style.display=''" class="timer-btn" style="flex:1;padding:8px;">Back</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Create Shared Playlist Inline -->
+            <div id="createGlobalPlaylistForm" style="display:none;">
+                <div style="background:#282828;border-radius:8px;padding:12px;border:1px solid #404040;">
+                    <div class="form-group" style="text-align:left;">
+                        <label for="globalPlaylistName" style="color:#fff;display:block;margin-bottom:4px;font-size:0.85em;">New Shared Playlist Name</label>
+                        <input type="text" id="globalPlaylistName" placeholder="Enter playlist name" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
+                    </div>
+                    <div class="form-group" style="margin-top:8px;text-align:left;">
+                        <label style="color:#fff;display:block;margin-bottom:4px;font-size:0.85em;">Cover Image (optional)</label>
+                        <div style="display:flex;gap:8px;margin-bottom:8px;">
+                            <button onclick="setCoverSource('url')" id="coverSrcUrlBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:var(--accent-color);color:#000;cursor:pointer;font-weight:600;">URL</button>
+                            <button onclick="setCoverSource('file')" id="coverSrcFileBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;cursor:pointer;">Upload</button>
+                            <button onclick="setCoverSource('path')" id="coverSrcPathBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;cursor:pointer;">File Path</button>
+                        </div>
+                        <div id="coverUrlGroup">
+                            <input type="text" id="coverImageUrl" placeholder="Paste image URL (e.g. https://example.com/image.jpg)" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
+                        </div>
+                        <div id="coverFileGroup" style="display:none;">
+                            <input type="file" id="coverImageFile" accept=".jpg,.jpeg,.png,.gif,.svg,.webp" style="color:#fff;width:100%;">
+                        </div>
+                        <div id="coverPathGroup" style="display:none;">
+                            <input type="text" id="coverImagePath" placeholder="Local file path (e.g. C:\images\cover.jpg)" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-top:10px;">
+                        <button onclick="hideCreateGlobalPlaylistForm()" class="timer-btn" style="flex:1;padding:8px;">Cancel</button>
+                        <button onclick="createGlobalPlaylist()" class="timer-btn" style="flex:1;background:var(--accent-color);color:#000;font-weight:600;padding:8px;">Create</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="settingsAppearanceView" style="display:none;">
+            <div class="settings-back" onclick="showSettingsMain()">← Back</div>
+            <h4 class="settings-section-title" style="text-align: center;">Appearance</h4>
+            <p class="settings-section-desc" style="text-align: center;">Customize the look and feel of the app.</p>
+
+            <div style="margin-bottom: 20px; text-align: center;">
+                <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 10px; text-align: center;">MODE</p>
+                <div style="display: flex; gap: 10px;">
+                    <button class="settings-item" onclick="setThemeMode('dark', this)" id="darkModeBtn" style="flex: 1; justify-content: center; text-align: center;">
+                        <span style="font-size: 1.2em;">🌙</span>
+                        <span style="display: block; margin-top: 4px;">Dark Mode</span>
+                    </button>
+                    <button class="settings-item" onclick="setThemeMode('light', this)" id="lightModeBtn" style="flex: 1; justify-content: center; text-align: center;">
+                        <span style="font-size: 1.2em;">☀️</span>
+                        <span style="display: block; margin-top: 4px;">Light Mode</span>
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px; text-align: center;">
+                <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 10px; text-align: center;">THEME COLOR</p>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <div class="color-swatch" data-theme="green" style="background: #1db954; width: 36px;" onclick="selectThemeColor('#1db954', this)"></div>
+                    <div class="color-swatch" data-theme="blue" style="background: #3b82f6; width: 36px;" onclick="selectThemeColor('#3b82f6', this)"></div>
+                    <div class="color-swatch" data-theme="purple" style="background: #a855f7; width: 36px;" onclick="selectThemeColor('#a855f7', this)"></div>
+                    <div class="color-swatch" data-theme="red" style="background: #ef4444; width: 36px;" onclick="selectThemeColor('#ef4444', this)"></div>
+                    <div class="color-swatch" data-theme="pink" style="background: #ec4899; width: 36px;" onclick="selectThemeColor('#ec4899', this)"></div>
+                    <div class="color-swatch" data-theme="orange" style="background: #f97316; width: 36px;" onclick="selectThemeColor('#f97316', this)"></div>
+                    <div class="color-swatch" data-theme="teal" style="background: #14b8a6; width: 36px;" onclick="selectThemeColor('#14b8a6', this)"></div>
+                    <div class="color-swatch" data-theme="yellow" style="background: #eab308; width: 36px;" onclick="selectThemeColor('#eab308', this)"></div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px; text-align: center;">
+                <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 10px; text-align: center;">FONT SIZE</p>
+                <div class="font-size-options" style="justify-content: center;">
+                    <button class="font-size-btn" data-size="small" onclick="setFontSize('small', this)">
+                        <span class="font-size-label">Small</span>
+                        <span class="font-size-preview font-size-preview-small">Aa</span>
+                    </button>
+                    <button class="font-size-btn" data-size="medium" onclick="setFontSize('medium', this)">
+                        <span class="font-size-label">Medium</span>
+                        <span class="font-size-preview font-size-preview-medium">Aa</span>
+                    </button>
+                    <button class="font-size-btn" data-size="big" onclick="setFontSize('big', this)">
+                        <span class="font-size-label">Big</span>
+                        <span class="font-size-preview font-size-preview-big">Aa</span>
+                    </button>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 10px; text-align: center;">BACKGROUND</p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button class="settings-item" onclick="setDefaultBackground()" id="defaultBgBtn" style="flex: 1; justify-content: center; text-align: center;">
+                        <span style="font-size: 1.2em;">⬛</span>
+                        <span style="display: block; margin-top: 4px;">Default</span>
+                    </button>
+                    <button class="settings-item" onclick="document.getElementById('bgImageInput').click()" id="customBgBtn" style="flex: 1; justify-content: center; text-align: center;">
+                        <span style="font-size: 1.2em;">🖼</span>
+                        <span style="display: block; margin-top: 4px;">Custom Image</span>
+                    </button>
+                </div>
+                <input type="file" id="bgImageInput" accept="image/*" style="display:none;" onchange="setCustomBackground(event)">
+                <button class="bg-remove-btn" onclick="removeBackground()" style="margin-top: 10px; display: none;" id="removeBgBtn">Remove Background</button>
+            </div>
+        </div>
+        <div id="accountPrivacyView" style="display:none;">
+            <div class="settings-back" onclick="showSettingsMain()">← Back</div>
+            <h4 class="settings-section-title">Account & Privacy</h4>
+            <p class="settings-section-desc">Manage your account settings.</p>
+            <div class="acc-item" onclick="openAccountModal('username')">
+                <span class="settings-item-icon">👤</span>
+                <span class="settings-item-label">Change Username</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="acc-item" onclick="openAccountModal('password')">
+                <span class="settings-item-icon">🔑</span>
+                <span class="settings-item-label">Change Password</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="acc-item" onclick="openAccountModal('email')">
+                <span class="settings-item-icon">📧</span>
+                <span class="settings-item-label">Change Email</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="acc-item" onclick="openAccountModal('delete')" style="color: #ff4444;">
+                <span class="settings-item-icon" style="color: #ff4444;">🗑</span>
+                <span class="settings-item-label">Delete Account</span>
+                <span class="settings-item-arrow" style="color: #ff4444;">›</span>
+            </div>
+        </div>
+        <div id="settingsAboutView" style="display:none;">
+            <div class="settings-back" onclick="showSettingsMain()">← Back</div>
+            <h4 class="settings-section-title" style="text-align: center;">ℹ️ About</h4>
+            <p class="settings-section-desc" style="text-align: center;">All about My Music app.</p>
+
+            <div class="acc-item" onclick="showHelpView()">
+                <span class="settings-item-icon">🛠️</span>
+                <span class="settings-item-label">Help & Support</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="acc-item" onclick="showRateView()">
+                <span class="settings-item-icon">⭐</span>
+                <span class="settings-item-label">Rate App</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="acc-item" onclick="showVersionView()">
+                <span class="settings-item-icon">📱</span>
+                <span class="settings-item-label">App Version</span>
+                <span style="color: var(--accent-color); font-size: 0.9em; font-weight: 600;">1.0.0</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="acc-item" onclick="showPrivacyView()">
+                <span class="settings-item-icon">📄</span>
+                <span class="settings-item-label">Privacy Policy</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="acc-item" onclick="showTermsView()">
+                <span class="settings-item-icon">📜</span>
+                <span class="settings-item-label">Terms & Conditions</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="acc-item" onclick="showDeveloperInfoView()">
+                <span class="settings-item-icon">👨‍💻</span>
+                <span class="settings-item-label">Developer Info</span>
+                <span class="settings-item-arrow">›</span>
+            </div>
+            <div class="acc-item" onclick="contactSupport()">
+                <span class="settings-item-icon">📧</span>
+                <span class="settings-item-label">Contact Us</span>
+                <span style="color: var(--accent-color); font-size: 0.85em; font-weight: 500;">support@musicapp.com</span>
+            </div>
+        </div>
+        <div id="settingsPrivacyView" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; background: #121212; overflow-y: auto;">
+            <div style="width: 100%; max-width: 900px; min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; padding: 20px;">
+                <div class="settings-back" onclick="showAboutView()" style="align-self: flex-start; flex-shrink: 0;">← Back</div>
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
+                    <div style="width: 100%; max-width: 700px; display: flex; flex-direction: column; align-items: center;">
+                        <div style="font-size: 2.8em; margin-bottom: 12px;">🔒</div>
+                        <h3 style="color: #fff; font-size: 1.5em; font-weight: 700; margin-bottom: 4px; text-align: center;">Privacy Policy</h3>
+                        <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 6px; text-align: center;">Last Updated: June 2026</p>
+
+                        <p style="color: #b3b3b3; font-size: 0.9em; text-align: center; margin-bottom: 25px; line-height: 1.6; max-width: 550px;">Welcome to Music App. Your privacy is important to us.</p>
+
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">1. Information We Collect</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">• Name<br>• Email Address<br>• Profile Information</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">2. How We Use Your Information</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">• To create and manage your account.<br>• To provide music streaming and playlist features.<br>• To improve app performance and user experience.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">3. Data Security</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">We take reasonable measures to protect your personal information and account data.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">4. User Privacy</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">We do not sell, share, or misuse your personal information with third parties.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">5. Account Control</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">Users can update their profile information, change passwords, or delete their accounts at any time.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">6. Changes to Privacy Policy</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">This policy may be updated periodically. Changes will be reflected within the app.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 25px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">7. Contact Us</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">Developer: METE BHARATH<br>Email: metebharath4@gmail.com</p>
+                        </div>
+
+                        <p style="color: #888; font-size: 0.85em; text-align: center; line-height: 1.6; max-width: 500px;">By using Music App, you agree to this Privacy Policy.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="settingsTermsView" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; background: #121212; overflow-y: auto;">
+            <div style="width: 100%; max-width: 900px; min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; padding: 20px;">
+                <div class="settings-back" onclick="showAboutView()" style="align-self: flex-start; flex-shrink: 0;">← Back</div>
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
+                    <div style="width: 100%; max-width: 700px; display: flex; flex-direction: column; align-items: center;">
+                        <div style="font-size: 2.8em; margin-bottom: 12px;">📜</div>
+                        <h3 style="color: #fff; font-size: 1.5em; font-weight: 700; margin-bottom: 4px; text-align: center;">Terms & Conditions</h3>
+                        <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 6px; text-align: center;">Last Updated: June 2026</p>
+                        <p style="color: #b3b3b3; font-size: 0.9em; text-align: center; margin-bottom: 25px; line-height: 1.6; max-width: 550px;">Welcome to Music App. By using this application, you agree to the following terms and conditions.</p>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">1. Acceptance of Terms</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">By accessing or using Music App, you agree to comply with these Terms & Conditions.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">2. User Accounts</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">• Users are responsible for maintaining the security of their accounts.<br>• Users must provide accurate information during registration.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">3. Acceptable Use</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">• Do not misuse the application.<br>• Do not attempt to access unauthorized data or accounts.<br>• Do not upload harmful or illegal content.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">4. Music Content</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">• Music provided through the app is for personal use only.<br>• Users must respect copyright and intellectual property rights.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">5. Privacy</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">Your use of the app is also governed by our Privacy Policy.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">6. Limitation of Liability</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">The developer is not responsible for any loss of data, service interruptions, or damages resulting from the use of the application.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 14px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">7. Changes to Terms</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">These Terms & Conditions may be updated from time to time. Continued use of the app indicates acceptance of any changes.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 20px 24px; margin-bottom: 25px; width: 100%; transition: transform 0.2s, box-shadow 0.2s; cursor: default;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 10px; text-align: center; font-size: 1em;">8. Contact Information</p>
+                            <p style="color: #b3b3b3; font-size: 0.88em; text-align: center; line-height: 1.8;">Developer: METE BHARATH<br>Email: metebharath4@gmail.com</p>
+                        </div>
+                        <p style="color: #888; font-size: 0.85em; text-align: center; line-height: 1.6; max-width: 500px;">By using Music App, you acknowledge that you have read and agreed to these Terms & Conditions.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="settingsDeveloperInfoView" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; background: #121212; overflow-y: auto;">
+            <div style="width: 100%; max-width: 900px; min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; padding: 20px;">
+                <div class="settings-back" onclick="showAboutView()" style="align-self: flex-start; flex-shrink: 0;">← Back</div>
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
+                    <div style="width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                        <div style="font-size: 4em; margin-bottom: 15px;">👨‍💻</div>
+                        <p style="color: var(--accent-color); font-size: 1.3em; font-weight: 700; margin-bottom: 5px;">Developer Info</p>
+                        <div style="background: #282828; border-radius: 12px; padding: 30px; width: 100%; margin-top: 20px;">
+                            <div style="margin-bottom: 20px;">
+                                <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 4px;">Name</p>
+                                <p style="color: #fff; font-weight: 600; font-size: 1.1em;">METE BHARATH</p>
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 4px;">Role</p>
+                                <p style="color: #fff; font-weight: 600; font-size: 1.1em;">Full Stack Developer</p>
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 4px;">Email</p>
+                                <p style="color: var(--accent-color); font-weight: 600; font-size: 1.1em;">metebharath4@gmail.com</p>
+                            </div>
+                            <div style="margin-bottom: 20px;">
+                                <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 4px;">App</p>
+                                <p style="color: #fff; font-weight: 600; font-size: 1.1em;">Music App v1.0.0</p>
+                            </div>
+                            <div>
+                                <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 4px;">Technologies Used</p>
+                                <p style="color: #fff; font-weight: 600; font-size: 1.1em; line-height: 1.8;">• React.js<br>• Node.js<br>• Express.js<br>• MongoDB<br>• HTML<br>• CSS<br>• JavaScript</p>
+                            </div>
+                        </div>
+                        <p style="color: #888; font-size: 0.82em; margin-top: 25px; line-height: 1.5;">Created with ❤️ for music lovers everywhere.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="settingsHelpView" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; background: #121212; overflow-y: auto;">
+            <div style="width: 100%; max-width: 900px; min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; padding: 20px;">
+                <div class="settings-back" onclick="showAboutView()" style="align-self: flex-start; flex-shrink: 0;">← Back</div>
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
+                    <div style="width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center;">
+                        <p style="color: var(--accent-color); font-weight: 600; font-size: 1.1em; margin-bottom: 20px;">Frequently Asked Questions</p>
+                        <div style="background: #282828; border-radius: 10px; padding: 18px; margin-bottom: 12px; width: 100%; text-align: center; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 6px;">Q: How do I create a playlist?</p>
+                            <p style="color: #b3b3b3; font-size: 0.9em;">A: Open Playlists and click Create Playlist.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 18px; margin-bottom: 12px; width: 100%; text-align: center; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 6px;">Q: How do I add songs to Favorites?</p>
+                            <p style="color: #b3b3b3; font-size: 0.9em;">A: Click the ❤️ icon on any song.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 18px; margin-bottom: 12px; width: 100%; text-align: center; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 6px;">Q: How do I change my password?</p>
+                            <p style="color: #b3b3b3; font-size: 0.9em;">A: Go to Settings → Account & Privacy → Change Password.</p>
+                        </div>
+                        <div style="background: #282828; border-radius: 10px; padding: 18px; margin-bottom: 20px; width: 100%; text-align: center; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.3)'" onmouseout="this.style.transform='';this.style.boxShadow=''">
+                            <p style="color: #fff; font-weight: 600; margin-bottom: 6px;">Q: How do I contact support?</p>
+                            <p style="color: #b3b3b3; font-size: 0.9em;">A: Email us at metebharath4@gmail.com</p>
+                        </div>
+
+                        <div style="width: 100%; border-top: 1px solid #404040; padding-top: 20px; margin-bottom: 15px; text-align: center;">
+                            <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 6px;">📧 Contact Support</p>
+                            <p style="color: var(--accent-color); font-weight: 600; cursor: pointer;" onclick="window.location.href='mailto:metebharath4@gmail.com'">metebharath4@gmail.com</p>
+                        </div>
+
+                        <div style="text-align: center; margin-bottom: 15px;">
+                            <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 4px;">👨‍💻 Developer</p>
+                            <p style="color: #fff; font-weight: 600;">METE BHARATH</p>
+                        </div>
+
+                        <button class="btn-primary" onclick="sendFeedback()" style="margin-top: 5px;">Send Feedback</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="settingsRateView" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; background: #121212; overflow-y: auto;">
+            <div style="width: 100%; max-width: 900px; min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; padding: 20px;">
+                <div class="settings-back" onclick="showAboutView()" style="align-self: flex-start; flex-shrink: 0;">← Back</div>
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
+                    <div style="width: 100%; max-width: 600px; display: flex; flex-direction: column; align-items: center;">
+                        <p style="color: #fff; font-size: 1.2em; font-weight: 600; margin-bottom: 8px; text-align: center;">Enjoying Music App?</p>
+                        <p style="color: #b3b3b3; margin-bottom: 20px; text-align: center;">Please rate us and share your feedback.</p>
+                        <div style="font-size: 2.5em; letter-spacing: 8px; margin-bottom: 20px;" id="starRating">
+                            <span style="cursor: pointer; color: #404040; transition: color 0.2s;" onmouseover="hoverStar(1, this)" onclick="setRating(1)" onmouseout="resetStars()" id="star1">★</span>
+                            <span style="cursor: pointer; color: #404040; transition: color 0.2s;" onmouseover="hoverStar(2, this)" onclick="setRating(2)" onmouseout="resetStars()" id="star2">★</span>
+                            <span style="cursor: pointer; color: #404040; transition: color 0.2s;" onmouseover="hoverStar(3, this)" onclick="setRating(3)" onmouseout="resetStars()" id="star3">★</span>
+                            <span style="cursor: pointer; color: #404040; transition: color 0.2s;" onmouseover="hoverStar(4, this)" onclick="setRating(4)" onmouseout="resetStars()" id="star4">★</span>
+                            <span style="cursor: pointer; color: #404040; transition: color 0.2s;" onmouseover="hoverStar(5, this)" onclick="setRating(5)" onmouseout="resetStars()" id="star5">★</span>
+                        </div>
+                        <p style="color: #b3b3b3; font-size: 0.85em; text-align: center;">Your feedback helps improve the app.</p>
+                        <p id="ratingThankYou" style="color: var(--accent-color); font-weight: 600; margin-top: 15px; display: none; text-align: center;">Thank you for rating! ⭐</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div id="settingsVersionView" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 1000; background: #121212; overflow-y: auto;">
+            <div style="width: 100%; max-width: 900px; min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; padding: 20px;">
+                <div class="settings-back" onclick="showAboutView()" style="align-self: flex-start; flex-shrink: 0;">← Back</div>
+                <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px 0;">
+                    <div style="width: 100%; max-width: 500px; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📱</div>
+                        <p style="color: #1db954; font-size: 1.5em; font-weight: 700; margin-bottom: 5px;">Music App</p>
+                        <p style="color: #fff; font-size: 1.1em; margin-bottom: 5px;">Version: <span style="color: var(--accent-color); font-weight: 600;">1.0.0</span></p>
+                        <p style="color: #b3b3b3; margin-bottom: 5px;">Release Date: June 2026</p>
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #404040; width: 100%;">
+                            <p style="color: #b3b3b3; font-size: 0.85em; margin-bottom: 5px;">Developed by:</p>
+                            <p style="color: #fff; font-weight: 600;">METE BHARATH</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Account Modals -->
+    <div id="accountModalOverlay" class="modal-overlay" style="display:none;" onclick="closeAccountModal(event)">
+        <div class="modal-content account-modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="accountModalTitle"></h3>
+                <button class="modal-close-btn" onclick="closeAccountModal()">&times;</button>
+            </div>
+            <div id="accountModalBody"></div>
+        </div>
+    </div>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutConfirmModal" class="modal-overlay" style="display:none;" onclick="closeLogoutConfirm(event)">
+        <div class="modal-content" onclick="event.stopPropagation()" style="max-width:380px;text-align:center;">
+            <div class="modal-header">
+                <h3>Logout</h3>
+                <button class="modal-close-btn" onclick="closeLogoutConfirm()">&times;</button>
+            </div>
+            <p style="color:#b3b3b3;margin:20px 0;">Are you sure you want to logout?</p>
+            <div style="display:flex;gap:12px;justify-content:center;padding-bottom:20px;">
+                <button class="btn-primary" onclick="confirmLogout()" style="padding:10px 30px;">Yes</button>
+                <button class="btn-secondary" onclick="closeLogoutConfirm()" style="padding:10px 30px;">No</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Layer -->
+    <div id="bgLayer" class="bg-layer"></div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast" style="display:none;"></div>
+
+    <script src="https://w.soundcloud.com/player/api.js"></script>
+    <script src="auth.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

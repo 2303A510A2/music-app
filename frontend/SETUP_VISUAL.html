@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Music - Server Setup Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1db954 0%, #121212 100%);
+            color: #fff;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        header {
+            background: #1e1e1e;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #1db954;
+        }
+        
+        header h1 {
+            color: #1db954;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            color: #b3b3b3;
+            font-size: 1.1em;
+        }
+        
+        .section {
+            background: #1e1e1e;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #1db954;
+        }
+        
+        .section h2 {
+            color: #1db954;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .step {
+            background: #282828;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            border-left: 3px solid #1db954;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #1db954;
+            color: #000;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            color: #1db954;
+            margin-bottom: 10px;
+        }
+        
+        code {
+            background: #1a1a1a;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #4dff4d;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .command-block {
+            background: #1a1a1a;
+            border: 1px solid #404040;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            color: #4dff4d;
+            overflow-x: auto;
+        }
+        
+        .success {
+            background: #1db954;
+            color: #000;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .warning {
+            background: #ff9800;
+            color: #000;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        .error {
+            background: #ff4d4d;
+            color: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 12px 25px;
+            background: #1db954;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #1aa34a;
+            transform: translateY(-2px);
+        }
+        
+        .important {
+            background: #ff6b6b;
+            color: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #ff0000;
+        }
+        
+        .quick-option {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .option-box {
+            background: #282828;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #404040;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .option-box:hover {
+            border-color: #1db954;
+            box-shadow: 0 0 15px rgba(29, 185, 84, 0.3);
+        }
+        
+        .option-box h3 {
+            color: #1db954;
+            margin-bottom: 10px;
+        }
+        
+        .troubleshoot {
+            background: #282828;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            border-left: 3px solid #ff9800;
+        }
+        
+        .troubleshoot strong {
+            color: #ff9800;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            
+            .quick-option {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 My Music App</h1>
+            <p>Backend Server Setup Guide</p>
+        </header>
+
+        <!-- Problem Section -->
+        <div class="section">
+            <h2>❌ The Problem</h2>
+            <p>You're seeing: <strong>"Connection error. Make sure the backend server is running on http://localhost:5000"</strong></p>
+            <p>This means the backend server is <strong>NOT RUNNING</strong>.</p>
+            <p style="margin-top: 15px;">✓ The good news: It's easy to fix! Just follow the steps below.</p>
+        </div>
+
+        <!-- Quick Start -->
+        <div class="section">
+            <h2>⚡ QUICKEST WAY (Recommended)</h2>
+            
+            <div class="quick-option">
+                <div class="option-box">
+                    <h3>🤖 Automatic</h3>
+                    <p>Let the script do everything</p>
+                    <ol style="text-align: left; margin-top: 10px;">
+                        <li>Find and double-click:<br><code>INSTALL_AND_RUN.bat</code></li>
+                        <li>Wait for installation</li>
+                        <li>Server starts automatically</li>
+                    </ol>
+                </div>
+                <div class="option-box">
+                    <h3>⌨️ Manual</h3>
+                    <p>Full control and understanding</p>
+                    <ol style="text-align: left; margin-top: 10px;">
+                        <li>Open Command Prompt</li>
+                        <li>Navigate to project</li>
+                        <li>Run commands below</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Steps -->
+        <div class="section">
+            <h2>📋 Manual Steps (3 Simple Steps)</h2>
+
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-title">Open Command Prompt (Terminal)</div>
+                <ul>
+                    <li>Press: <code>Windows Key + R</code></li>
+                    <li>Type: <code>cmd</code></li>
+                    <li>Press: <code>Enter</code></li>
+                </ul>
+            </div>
+
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-title">Navigate to Project Folder</div>
+                <p>Type this command and press Enter:</p>
+                <div class="command-block">cd Desktop\"my music"</div>
+                <p style="margin-top: 10px; color: #b3b3b3;">Note: The quotes are important because of the space in "my music"</p>
+            </div>
+
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-title">Install Dependencies & Start Server</div>
+                <p>Type this command and press Enter:</p>
+                <div class="command-block">npm install && npm start</div>
+                <p style="margin-top: 10px;">This will:</p>
+                <ul>
+                    <li>Install required packages (first time only, takes 1-2 minutes)</li>
+                    <li>Start the backend server automatically</li>
+                    <li>Show: <code>Server running on http://localhost:5000</code></li>
+                </ul>
+            </div>
+
+            <div class="success">
+                ✓ After step 3, open your browser and go to: http://localhost:5000
+            </div>
+        </div>
+
+        <!-- Important Note -->
+        <div class="important">
+            <h3>⚠️ IMPORTANT: DO NOT CLOSE THE TERMINAL!</h3>
+            <p>The terminal window MUST stay open while you use the app.</p>
+            <p>When you're done using the app, press <code>Ctrl+C</code> to stop the server.</p>
+        </div>
+
+        <!-- Verification -->
+        <div class="section">
+            <h2>✓ Verify It's Working</h2>
+            <p>After running "npm start", you should see these messages in the terminal:</p>
+            <div class="command-block">
+Connected to SQLite database<br>
+Users table ready<br>
+Playlists table ready<br>
+Songs table ready<br>
+Server running on http://localhost:5000<br>
+Press Ctrl+C to stop the server
+            </div>
+            <p style="margin-top: 15px;">If you see all these messages, your server is running! ✓</p>
+            
+            <p style="margin-top: 20px;"><strong>Next:</strong> Go to your browser and visit:</p>
+            <div style="background: #1db954; color: #000; padding: 15px; border-radius: 6px; text-align: center; font-weight: 600; font-size: 1.1em;">
+                http://localhost:5000
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="section">
+            <h2>🔧 If You Get Errors</h2>
+
+            <div class="troubleshoot">
+                <strong>Error: "npm: command not found"</strong><br>
+                Node.js is not installed. Download from <a href="https://nodejs.org" style="color: #1db954;" target="_blank">https://nodejs.org</a>, install it, restart your computer, and try again.
+            </div>
+
+            <div class="troubleshoot">
+                <strong>Error: "cd: command not found"</strong><br>
+                You might be using PowerShell. Close it and use Command Prompt (cmd) instead.
+            </div>
+
+            <div class="troubleshoot">
+                <strong>Error: "Port 5000 already in use"</strong><br>
+                Another app is using port 5000. Close other applications and try again, or restart your computer.
+            </div>
+
+            <div class="troubleshoot">
+                <strong>Still getting "Connection error"</strong><br>
+                Make sure you see "Server running on http://localhost:5000" in the terminal. If not, npm install might still be running. Be patient or close and try again.
+            </div>
+
+            <div class="troubleshoot">
+                <strong>Error: "Cannot find module"</strong><br>
+                Run <code>npm install</code> again. Sometimes it doesn't complete on first try.
+            </div>
+        </div>
+
+        <!-- Next Steps -->
+        <div class="section">
+            <h2>🎵 Once Server is Running</h2>
+            <ol>
+                <li>Go to: <strong>http://localhost:5000</strong></li>
+                <li>Click "<strong>Sign up</strong>"</li>
+                <li>Enter your details:
+                    <ul>
+                        <li>Full Name: Your name</li>
+                        <li>Email: Your email</li>
+                        <li>Password: 6+ characters</li>
+                        <li>Confirm Password: Same password</li>
+                    </ul>
+                </li>
+                <li>Click "<strong>Create Account</strong>"</li>
+                <li>Login with your email and password</li>
+                <li><strong>Enjoy your music! 🎵</strong></li>
+            </ol>
+        </div>
+
+        <!-- Future Startups -->
+        <div class="section">
+            <h2>Next Time (No npm install needed)</h2>
+            <p>After the first setup, you only need to:</p>
+            <ol>
+                <li>Open Command Prompt</li>
+                <li>Navigate to folder: <code>cd Desktop\"my music"</code></li>
+                <li>Start server: <code>npm start</code></li>
+                <li>Go to: <code>http://localhost:5000</code></li>
+            </ol>
+            <p style="margin-top: 15px;"><strong>You don't need to run "npm install" again!</strong></p>
+        </div>
+
+        <!-- Help Section -->
+        <div class="section" style="text-align: center;">
+            <h2>📖 Need More Help?</h2>
+            <p>Check these files in your project folder:</p>
+            <ul style="list-style: none; margin-top: 15px;">
+                <li>📄 <code>QUICK_START.txt</code> - Simple 3-step guide</li>
+                <li>📄 <code>COMPLETE_SERVER_SETUP.txt</code> - Detailed instructions</li>
+                <li>📄 <code>SETUP_GUIDE.txt</code> - Troubleshooting help</li>
+            </ul>
+        </div>
+
+        <!-- Success Message -->
+        <div class="success" style="text-align: center; font-size: 1.2em; margin-bottom: 30px;">
+            You've got this! Follow the 3 steps above and your server will be running. 🚀
+        </div>
+    </div>
+</body>
+</html>

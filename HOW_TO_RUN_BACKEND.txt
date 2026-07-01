@@ -1,0 +1,265 @@
+=====================================
+BACKEND SERVER - HOW TO RUN
+=====================================
+
+The "Connection error" happens because the backend server is not running.
+Follow this guide step-by-step to start your server.
+
+WHAT IS THE BACKEND SERVER?
+===========================
+The backend server is what stores user data and handles login/register.
+Without it running, the app cannot create accounts or let users login.
+
+
+THE FASTEST WAY (Automatic):
+===========================
+
+Option 1: Double-Click the Batch File
+--------------------------------------
+Look in your project folder for: INSTALL_AND_RUN.bat
+Double-click it.
+Wait while it:
+  1. Installs packages (first time only)
+  2. Starts the server
+  3. Shows "Server running on http://localhost:5000"
+
+Done! The server is running.
+
+Now open browser and go to: http://localhost:5000
+
+
+Option 2: Double-Click START.bat
+--------------------------------
+Look for: START.bat
+Double-click it.
+It will start the server.
+
+
+MANUAL WAY (Full Control):
+==========================
+
+Step 1: Open Terminal (Command Prompt)
+------
+- Press Windows Key + R
+- Type: cmd
+- Press Enter
+- A black terminal window opens
+
+Step 2: Navigate to Project Folder
+------
+Copy this command and paste in terminal:
+  cd Desktop\"my music"
+
+Press Enter.
+
+The path should now show "my music" in it.
+
+Step 3: Install Dependencies (First Time Only!)
+------
+Type this command and press Enter:
+  npm install
+
+This downloads all packages needed.
+Takes 1-2 minutes - be patient!
+You'll see many npm messages - this is normal.
+
+When done, you see: "added XXX packages in XX seconds"
+
+Step 4: Start the Server
+------
+Type this command and press Enter:
+  npm start
+
+WAIT! Look for this message:
+  "Server running on http://localhost:5000"
+
+If you see this, your server is working! ✓
+
+Step 5: Open Browser
+------
+Open any browser (Chrome, Firefox, Edge, etc.)
+Go to: http://localhost:5000
+
+You should see the login/register page.
+
+Step 6: Create Account or Login
+------
+✓ Click "Sign up" to create account
+  OR
+✓ Click "Log In" to login (if you have account)
+
+
+SUCCESS MESSAGES YOU SHOULD SEE:
+================================
+
+After creating account:
+  ✓ You have created account successfully!
+  Then redirects to login page
+
+After logging in:
+  ✓ I have been logged in successfully!
+  Then goes to dashboard with playlists
+
+
+VERY IMPORTANT THINGS:
+======================
+
+⚠️  DO NOT CLOSE THE TERMINAL!
+    The terminal must stay open while you use the app.
+    Closing it will stop the server.
+
+⚠️  ONLY DO STEP 3 ONCE!
+    You only need "npm install" the first time.
+    Afterwards, just do Step 2 and 4.
+
+⚠️  KEEP PORT 5000 FREE
+    Make sure nothing else is using port 5000.
+    Close other Node.js apps if you have them.
+
+
+WHAT IF IT DOESN'T WORK?
+========================
+
+Problem 1: "npm: command not found"
+→ Node.js is not installed
+→ Download from: https://nodejs.org (LTS version)
+→ Install it
+→ Restart your computer
+→ Try again
+
+Problem 2: "Cannot find module"
+→ npm install didn't finish
+→ Run: npm install
+→ Wait for it to complete
+
+Problem 3: "Port 5000 already in use"
+→ Another app is using port 5000
+→ Close other applications
+→ Or restart your computer
+
+Problem 4: Still getting "Connection error"
+→ Make sure you see: "Server running on http://localhost:5000"
+→ Make sure terminal is still open
+→ Make sure you're using: http:// (not https://)
+→ Try refreshing page: Press F5 in browser
+
+Problem 5: Server won't start
+→ Delete the file: backend/mymusic.db
+→ Run: npm start again
+→ This creates a fresh database
+
+
+NEXT TIME (Much Faster):
+=======================
+
+You don't need to install again!
+
+Just do:
+1. Open terminal (Windows Key + R, cmd, Enter)
+2. Type: cd Desktop\"my music"
+3. Type: npm start
+4. Wait for: "Server running on http://localhost:5000"
+5. Go to: http://localhost:5000 in browser
+
+That's it! Only 5 steps instead of 6.
+
+
+HOW TO STOP THE SERVER:
+=======================
+
+When you're done using the app:
+1. Look at the terminal window
+2. Press: Ctrl + C
+3. Type: Y
+4. Press: Enter
+
+The server will stop.
+
+
+VERIFY SERVER IS RUNNING:
+=========================
+
+After starting (Step 4), you should see:
+  Connected to SQLite database
+  Users table ready
+  Playlists table ready
+  Songs table ready
+  Server running on http://localhost:5000
+  Press Ctrl+C to stop the server
+
+If you see all these messages = Server is working! ✓
+
+If messages are missing = Something went wrong
+Check error messages in terminal and restart.
+
+
+QUICK COMMAND REFERENCE:
+=======================
+
+cd Desktop\"my music"     → Go to project folder
+npm install              → Install packages (first time)
+npm start                → Start server
+npm run dev              → Start with auto-reload (if using nodemon)
+Ctrl+C                   → Stop server
+node --version           → Check Node.js version
+npm --version            → Check npm version
+
+
+FOLDER STRUCTURE:
+=================
+
+my music/
+├── backend/              ← Server code
+│   ├── routes/
+│   ├── server.js         ← Main server file
+│   ├── database.js       ← Database setup
+│   └── mymusic.db        ← Database file (created automatically)
+├── frontend/             ← User interface
+│   ├── login.html
+│   ├── register.html
+│   ├── dashboard.html
+│   └── styles.css
+├── package.json          ← Dependencies list
+└── START.bat             ← Quick launcher
+
+
+DATABASE INFO:
+==============
+
+The app uses SQLite database.
+Database file: backend/mymusic.db
+
+This file is created automatically when server starts.
+
+It contains 3 tables:
+  1. users - Stores user accounts
+  2. playlists - For future playlist features
+  3. songs - For future song features
+
+If you have problems with database:
+- Delete backend/mymusic.db
+- Restart server
+- A fresh database is created
+
+
+USEFUL TIPS:
+============
+
+✓ Keep terminal window visible while working
+✓ Copy and paste long commands to avoid typing errors
+✓ If terminal shows errors, read them carefully
+✓ Google the error message if confused
+✓ Restart computer if nothing works
+✓ Check internet connection
+✓ Make sure firewall isn't blocking port 5000
+
+
+YOU'VE GOT THIS! 🎵
+==================
+
+Just follow this guide step by step and it will work!
+
+If stuck, check:
+1. This file for your specific issue
+2. SETUP_CHECKLIST.txt to verify each step
+3. COMPLETE_SERVER_SETUP.txt for more details

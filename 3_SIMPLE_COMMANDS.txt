@@ -1,0 +1,117 @@
+====================================================================
+THE ONLY 3 COMMANDS YOU NEED TO RUN
+====================================================================
+
+Your backend server is not running. Here's how to start it:
+
+COMMAND 1: Open Terminal
+========================
+Press these keys: Windows Key + R
+Type: cmd
+Press: Enter
+
+(A terminal window will open)
+
+
+COMMAND 2: Go to Your Project Folder
+====================================
+Copy this exactly and paste it in the terminal:
+
+    cd Desktop\"my music"
+
+Press: Enter
+
+
+COMMAND 3: Install and Start Server
+===================================
+Copy this exactly and paste it in the terminal:
+
+    npm install && npm start
+
+Press: Enter
+
+Wait for the message: "Server running on http://localhost:5000"
+
+
+THAT'S IT! 
+==========
+Your server is now running.
+
+Go to your browser and open:
+    http://localhost:5000
+
+You can now create an account and login!
+
+
+IMPORTANT NOTES:
+================
+
+✓ Do NOT close the terminal - it must stay open
+✓ First time: npm install takes 1-2 minutes - be patient!
+✓ Next time: Just do Commands 2 and 3 (skip npm install)
+✓ To stop server: Press Ctrl+C in the terminal
+
+
+COPY-PASTE COMMANDS:
+====================
+
+If you have trouble typing, copy and paste these:
+
+Command 2 (copy exactly):
+    cd Desktop\"my music"
+
+Command 3 (copy exactly):
+    npm install && npm start
+
+
+WHAT YOU SHOULD SEE:
+====================
+
+After running Command 3, you should see something like:
+
+    > my-music-app@1.0.0 start
+    > node backend/server.js
+    Connected to SQLite database
+    Users table ready
+    Playlists table ready
+    Songs table ready
+    Server running on http://localhost:5000
+    Press Ctrl+C to stop the server
+
+If you see this, you're good! Open http://localhost:5000 in browser.
+
+
+IF YOU GET ERRORS:
+==================
+
+"npm: command not found"
+→ Node.js not installed
+→ Download: https://nodejs.org
+→ Install and restart computer
+→ Try again
+
+"cd: command not found"  
+→ Using PowerShell instead of Command Prompt
+→ Close and use cmd.exe instead
+
+"Port 5000 already in use"
+→ Another app using port 5000
+→ Close other applications or restart PC
+
+"Cannot find module"
+→ Run: npm install
+→ Wait for it to finish completely
+
+
+NEED HELP?
+==========
+Files in your project folder with more help:
+- COMPLETE_SERVER_SETUP.txt
+- QUICK_START.txt
+- SETUP_GUIDE.txt
+- SETUP_VISUAL.html (open in browser)
+
+
+YOU'VE GOT THIS! 🎵
+==================
+Just run those 3 commands and your app will work!

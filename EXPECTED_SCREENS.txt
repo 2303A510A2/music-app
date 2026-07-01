@@ -1,0 +1,263 @@
+=====================================
+EXPECTED SCREENS - WHAT YOU'LL SEE
+=====================================
+
+Follow this guide to know what screens to expect at each step.
+
+
+STEP 1: YOU START THE SERVER
+============================
+
+Terminal Command:
+  npm start
+
+Expected Terminal Output:
+  > my-music-app@1.0.0 start
+  > node backend/server.js
+  Connected to SQLite database
+  Users table ready
+  Playlists table ready
+  Songs table ready
+  Server running on http://localhost:5000
+  Press Ctrl+C to stop the server
+
+If you see all these messages = SUCCESS ✓
+If you see error messages = PROBLEM ✗
+
+
+STEP 2: YOU OPEN BROWSER
+=======================
+
+You type in browser: http://localhost:5000
+
+Expected Screen:
+  - "My Music" title (green color)
+  - "Your Music, Your Playlists" subtitle
+  - Email input field
+  - Password input field
+  - "Log In" button (green)
+  - "Sign up" link at bottom
+  - "Forgot your password?" link
+
+
+STEP 3: YOU CLICK "SIGN UP"
+===========================
+
+Current Screen: Login page
+You click: "Sign up" link
+
+Expected Screen:
+  - "My Music" title (green)
+  - "Create Your Account" subtitle
+  - Full Name input field
+  - Email input field
+  - Password input field
+  - Confirm Password input field
+  - "Create Account" button (green)
+  - "Already have an account? Log in" link
+
+
+STEP 4: YOU FILL FORM AND CLICK "CREATE ACCOUNT"
+================================================
+
+You fill in:
+  Full Name: METE BHARATH
+  Email: 2303A510A2@sru.edu.in
+  Password: mypassword123
+  Confirm Password: mypassword123
+
+You click: "Create Account" button
+
+Expected Screen (Success):
+  ✓ You have created account successfully!
+  
+  "You have successfully created your account."
+  
+  "Redirecting to login page..."
+  
+  "Redirecting in 3 seconds..."
+
+If you see this screen = GREAT! You created account ✓
+
+Then it automatically goes to LOGIN PAGE
+
+
+STEP 5: YOU LOGIN WITH YOUR CREDENTIALS
+=======================================
+
+Current Screen: Login page
+You fill in:
+  Email: 2303A510A2@sru.edu.in
+  Password: mypassword123
+
+You click: "Log In" button
+
+Expected Screen (Success):
+  ✓ I have been logged in successfully!
+  
+  "Welcome back! You are now logged in."
+  
+  "Taking you to your dashboard..."
+  
+  "Loading in 2 seconds..."
+
+If you see this screen = LOGGED IN! ✓
+
+Then it automatically goes to DASHBOARD
+
+
+STEP 6: YOU SEE THE MUSIC DASHBOARD
+==================================
+
+Current Screen: Dashboard
+
+Expected Screen:
+  - "🎵 My Music" in navigation bar (green)
+  - Search bar in middle
+  - "📚 Library" button on right
+  - "🚪 Logout" button on right
+  - "Your Playlists" heading
+  - 4 Playlist cards in a grid:
+    1. Telugu Playlist (with image)
+    2. English Playlist (with image)
+    3. Hindi Playlist (with image)
+    4. Folk Playlist (with image)
+
+If you see all this = DASHBOARD WORKING! ✓
+
+
+ERROR SCREENS (What NOT to See):
+================================
+
+Error 1: "Connection error. Make sure the backend server is running"
+→ RED ERROR MESSAGE
+→ This means server is NOT running
+→ Go back to terminal and start it with: npm start
+
+Error 2: "Port 5000 already in use"
+→ RED ERROR in terminal
+→ Another app is using port 5000
+→ Close other apps or restart computer
+
+Error 3: "Cannot POST /api/auth/register"
+→ RED ERROR MESSAGE
+→ Backend server crashed or not running
+→ Check terminal for errors
+
+Error 4: "Cannot find module"
+→ ERROR in terminal
+→ Run: npm install
+→ Then: npm start
+
+
+HOW TO TEST CONNECTION:
+======================
+
+Your browser automatically tests when you try to register/login.
+
+If you want to manually test:
+1. Make sure server is running (terminal shows "Server running...")
+2. Go to: http://localhost:5000/test.html
+3. It will show if backend is reachable
+
+If page loads = Backend is working ✓
+If page shows error = Backend is not running ✗
+
+
+QUICK CHECKLIST:
+================
+
+☐ Terminal shows "Server running on http://localhost:5000"
+☐ Can open http://localhost:5000 in browser
+☐ See login page with form fields
+☐ Can click "Sign up" and see registration form
+☐ Can fill form and click "Create Account"
+☐ See "You have created account successfully!" screen
+☐ Redirected to login page
+☐ Can login with created credentials
+☐ See "I have been logged in successfully!" screen
+☐ Redirected to dashboard
+☐ See 4 playlists on dashboard
+
+If all checked = EVERYTHING WORKS! 🎉
+
+
+TROUBLESHOOTING CHECKLIST:
+=========================
+
+Can't see login page:
+  ☐ Server is running (terminal shows "Server running...")?
+  ☐ URL is correct: http://localhost:5000 (not https)?
+  ☐ Try refreshing browser: Press F5
+  ☐ Try clearing browser cache: Ctrl+Shift+Delete
+
+Getting "Connection error" on register:
+  ☐ Terminal is still open and shows server running?
+  ☐ Are you using correct URL: http://localhost:5000?
+  ☐ Try refreshing: Press F5
+  ☐ Restart server: Close terminal, run npm start again
+
+Can't register:
+  ☐ All fields filled?
+  ☐ Password is 6+ characters?
+  ☐ Password matches confirm password exactly?
+  ☐ Server running (check terminal)?
+
+Can't login:
+  ☐ Using correct email?
+  ☐ Using correct password?
+  ☐ Email and password match what you registered?
+  ☐ Server running?
+
+Dashboard not showing:
+  ☐ Logged in successfully (saw success message)?
+  ☐ Wait a moment for page to load
+  ☐ Try refreshing: Press F5
+
+
+SUCCESS INDICATORS:
+===================
+
+✓ Terminal shows all 5 "ready" messages
+✓ Terminal shows "Server running on http://localhost:5000"
+✓ Can access login page in browser
+✓ Can create account (see success screen)
+✓ Can login (see success screen)
+✓ See dashboard with playlists
+✓ Can click playlists
+✓ Can search for songs
+✓ Can click songs to play
+
+
+FAILURE INDICATORS:
+===================
+
+✗ Terminal shows error message
+✗ Port 5000 already in use
+✗ Cannot connect to server
+✗ Connection error when registering
+✗ Connection error when logging in
+✗ Database errors in terminal
+✗ "Cannot find module" error
+✗ Blank pages or white screen
+✗ Page keeps loading forever
+
+
+FINAL CHECKLIST BEFORE YOU START:
+=================================
+
+Before following the guide, make sure:
+☐ Node.js is installed (type: node --version in terminal)
+☐ npm is installed (type: npm --version in terminal)
+☐ Project folder exists: Desktop\my music
+☐ All files are in the folder
+☐ Internet connection is working
+☐ Port 5000 is available
+☐ Firewall allows port 5000
+
+
+YOU'RE READY! 🎵
+===============
+
+Follow the steps and watch for these screens.
+If you see them, you're on the right track!

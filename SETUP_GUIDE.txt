@@ -1,0 +1,139 @@
+=====================================
+MY MUSIC APP - COMPLETE SETUP GUIDE
+=====================================
+
+QUICK START (WINDOWS):
+=====================
+1. Double-click: START.bat
+2. Wait for dependencies to install
+3. Server will start automatically on http://localhost:5000
+4. Open browser and go to http://localhost:5000
+5. Register or Login
+
+
+MANUAL SETUP (If START.bat doesn't work):
+===========================================
+
+STEP 1: OPEN TERMINAL
+- Press: Windows Key + R
+- Type: cmd
+- Press: Enter
+
+STEP 2: NAVIGATE TO PROJECT FOLDER
+- Type this command:
+  cd Desktop\my music
+  
+- Press: Enter
+
+STEP 3: INSTALL DEPENDENCIES
+- Type this command:
+  npm install
+  
+- Press: Enter
+- Wait for all packages to install (may take 1-2 minutes)
+
+STEP 4: START THE SERVER
+- Type this command:
+  npm start
+  
+- Press: Enter
+- You should see: "Server running on http://localhost:5000"
+
+STEP 5: OPEN IN BROWSER
+- Open any web browser (Chrome, Firefox, Edge, etc.)
+- Go to: http://localhost:5000
+- You should see the login page
+
+STEP 6: CREATE ACCOUNT
+- Click "Sign up"
+- Fill in all fields:
+  * Full Name: Enter your name
+  * Email: Enter your email
+  * Password: Enter a password (6+ characters)
+  * Confirm Password: Re-enter same password
+- Click "Create Account"
+- You'll be redirected to login page
+- Enter your email and password
+- Click "Log In"
+- You're done! Enjoy the app!
+
+
+TROUBLESHOOTING:
+================
+
+1. "npm: command not found"
+   - Node.js is not installed
+   - Download from: https://nodejs.org
+   - Install it and restart your computer
+   - Try again
+
+2. "Port 5000 already in use"
+   - Another application is using port 5000
+   - Close any other Node.js applications
+   - Or change PORT in backend/.env to another number (e.g., 5001)
+   - And update the API_BASE_URL in frontend/register.html and frontend/login.html
+
+3. "Connection error. Please try again"
+   - Backend server is not running
+   - Make sure you completed STEP 1-4 above
+   - Check that terminal shows "Server running on http://localhost:5000"
+   - Make sure you're accessing http://localhost:5000 (not http://127.0.0.1:5000)
+
+4. "Cannot POST /api/auth/register"
+   - The backend didn't start properly
+   - Check the terminal for error messages
+   - Try restarting the server (STEP 4)
+
+5. Database errors
+   - Delete backend/mymusic.db file
+   - Restart the server
+   - This will create a fresh database
+
+
+TO STOP THE SERVER:
+===================
+- Press: Ctrl + C in the terminal
+- Type: Y
+- Press: Enter
+
+
+ACCESSING THE APP:
+==================
+After server is running, open your browser and visit:
+http://localhost:5000
+
+First time users:
+- Click "Sign up" to create account
+- Fill in all required fields
+- Click "Create Account"
+- You'll see a success message
+- Then login with your credentials
+
+Returning users:
+- Enter your email and password
+- Click "Log In"
+- Enjoy browsing your music!
+
+
+FEATURES:
+=========
+✓ Register with email and password
+✓ Secure login
+✓ Browse music playlists
+✓ Search for songs
+✓ Play songs from SoundCloud
+✓ Responsive design for mobile
+
+
+NEED HELP?
+==========
+- Check the terminal for error messages
+- Make sure Node.js is installed: type "node --version" in terminal
+- Make sure npm is installed: type "npm --version" in terminal
+- Ensure port 5000 is available
+- Check internet connection for SoundCloud player
+
+
+=====================================
+Good luck! Enjoy your music! 🎵
+=====================================

@@ -1,0 +1,16 @@
+﻿node_modules/
+package-lock.json
+client/package-lock.json
+backend/.env
+backend/mymusic.db
+backend/mymusic.db-journal
+dist/
+build/
+client/dist/
+client/node_modules/
+.vscode/
+.DS_Store
+*.log
+frontend/music/
+frontend/images/
+client/src/assets/

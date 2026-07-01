@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Music - Server Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background-color: #1e1e1e;
+            padding: 30px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #1db954;
+        }
+        .status {
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        .status.success {
+            background-color: #1db954;
+            color: #000;
+        }
+        .status.error {
+            background-color: #ff4d4d;
+            color: #fff;
+        }
+        .status.loading {
+            background-color: #282828;
+            color: #1db954;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #1db954;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #1aa34a;
+        }
+        .info {
+            background-color: #282828;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        .info p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 My Music - Server Status</h1>
+        
+        <div id="status" class="status loading">
+            Testing connection to backend server...
+        </div>
+
+        <button onclick="testConnection()">Test Connection</button>
+        <button onclick="location.href='/'">Go to App</button>
+
+        <div class="info">
+            <p><strong>Backend URL:</strong> http://localhost:5000</p>
+            <p><strong>API Endpoint:</strong> http://localhost:5000/api/auth</p>
+            <p id="testResult"></p>
+        </div>
+    </div>
+
+    <script>
+        // Test backend connection on page load
+        window.onload = () => {
+            testConnection();
+        };
+
+        async function testConnection() {
+            const statusDiv = document.getElementById('status');
+            const testResult = document.getElementById('testResult');
+
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = 'Testing connection...';
+            testResult.textContent = '';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/user/1', {
+                    method: 'GET'
+                });
+
+                // Any response means server is running (even 404 or 500)
+                statusDiv.className = 'status success';
+                statusDiv.textContent = '✓ Backend Server is Running!';
+                testResult.innerHTML = '<strong>✓ Connection successful!</strong><br>You can now go to the app.';
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.textContent = '✗ Backend Server is Not Running';
+                testResult.innerHTML = `
+                    <strong>Error Details:</strong><br>
+                    ${error.message}<br><br>
+                    <strong>How to fix:</strong><br>
+                    1. Open a terminal<br>
+                    2. Navigate to the project folder<br>
+                    3. Run: npm start<br>
+                    4. Wait for "Server running on http://localhost:5000"<br>
+                    5. Then refresh this page
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Music - Register</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-form-wrapper">
+            <h1>My Music</h1>
+            <p class="auth-subtitle">Create Your Account</p>
+
+            <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                <div class="form-group">
+                    <label for="fullName">Full Name</label>
+                    <input type="text" id="fullName" placeholder="Enter your full name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerEmail">Email</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" placeholder="Enter your password (min 6 characters)" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm your password" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="petName">Security Question 1: What is your pet's name?</label>
+                    <input type="text" id="petName" placeholder="Enter your pet's name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="favoriteColor">Security Question 2: What is your favorite color?</label>
+                    <input type="text" id="favoriteColor" placeholder="Enter your favorite color" required>
+                </div>
+
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+
+            <div class="auth-message" id="registerMessage"></div>
+
+            <div id="successMessage" style="display: none; text-align: center;">
+                <h2 style="color: #1db954; font-size: 1.5em; margin-bottom: 20px;">✓ Account Created Successfully!</h2>
+                <p style="color: #b3b3b3; margin-bottom: 15px;">You have successfully created your account.</p>
+                <p style="color: #fff; margin-bottom: 20px;">Redirecting to login page...</p>
+                <div style="background: #282828; padding: 15px; border-radius: 6px; color: #1db954; font-weight: 600;" id="countdownText">Redirecting in 3 seconds...</div>
+            </div>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="login.html">Log in</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function handleRegister(event) {
+            event.preventDefault();
+
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const petName = document.getElementById('petName').value;
+            const favoriteColor = document.getElementById('favoriteColor').value;
+            const messageDiv = document.getElementById('registerMessage');
+
+            // Validation
+            if (password.length < 6) {
+                messageDiv.className = 'auth-message error';
+                messageDiv.textContent = 'Password must be at least 6 characters';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                messageDiv.className = 'auth-message error';
+                messageDiv.textContent = 'Passwords do not match';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fullName, email, password, confirmPassword, petName, favoriteColor })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Hide form and show success message
+                    document.getElementById('registerForm').style.display = 'none';
+                    document.querySelector('.auth-footer').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                    messageDiv.style.display = 'none';
+                    
+                    // Countdown before redirecting
+                    let countdown = 3;
+                    const countdownInterval = setInterval(() => {
+                        countdown--;
+                        if (countdown > 0) {
+                            document.getElementById('countdownText').textContent = 'Redirecting in ' + countdown + ' seconds...';
+                        } else {
+                            clearInterval(countdownInterval);
+                            window.location.href = 'login.html';
+                        }
+                    }, 1000);
+                } else {
+                    messageDiv.className = 'auth-message error';
+                    messageDiv.textContent = data.message || 'Registration failed';
+                }
+            } catch (error) {
+                messageDiv.className = 'auth-message error';
+                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running on http://localhost:5000';
+                console.error('Error:', error);
+                console.log('Trying to connect to: http://localhost:5000/api/auth/register');
+                console.log('Error details:', error.message);
+            }
+        }
+    </script>
+</body>
+</html>

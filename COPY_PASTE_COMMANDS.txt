@@ -1,0 +1,60 @@
+════════════════════════════════════════════
+COPY & PASTE THESE 3 COMMANDS TO START APP
+════════════════════════════════════════════
+
+COMMAND 1: OPEN TERMINAL
+=======================
+Press: Windows Key + R
+Type: cmd
+Press: Enter
+
+(A black terminal window opens)
+
+
+COMMAND 2: GO TO FOLDER
+======================
+Copy this exactly:
+
+    cd Desktop\"my music"
+
+Paste in terminal and press Enter.
+
+
+COMMAND 3: INSTALL & RUN
+========================
+Copy this exactly:
+
+    npm install && npm start
+
+Paste in terminal and press Enter.
+
+
+WAIT FOR THIS MESSAGE:
+======================
+
+Server running on http://localhost:5000
+
+
+THEN OPEN BROWSER:
+==================
+
+Go to: http://localhost:5000
+
+Click "Sign up" to create account
+Or "Log In" if you have account
+
+
+THAT'S ALL! 🎵
+==============
+
+No more commands needed!
+
+Terminal must stay open.
+Close it when you're done with the app.
+
+
+NEXT TIME:
+==========
+
+Just do Command 2 and 3 again.
+(No need for "npm install" next time)

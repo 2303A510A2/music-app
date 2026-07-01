@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Music - Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-form-wrapper">
+            <h1>My Music</h1>
+            <p class="auth-subtitle">Your Music, Your Playlists</p>
+
+            <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                </div>
+
+                <button type="submit" class="btn-primary">Log In</button>
+            </form>
+
+            <div class="auth-admin-toggle" id="authAdminToggle">
+                <a href="#" onclick="showAdminLogin()">Login as Admin</a>
+                <span style="color:#555;"> | </span>
+                <a href="#" onclick="showAdminRegister()">Request Admin Access</a>
+            </div>
+
+            <!-- Admin Login Form -->
+            <form id="adminLoginForm" class="auth-form" style="display:none;" onsubmit="handleAdminLogin(event)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                    <a href="#" onclick="showRegularLogin()" style="color:#b3b3b3;font-size:0.85em;">← Back</a>
+                    <span style="color:#b3b3b3;font-size:0.85em;">Admin Login</span>
+                </div>
+                <div class="form-group">
+                    <label for="adminLoginEmail">Email</label>
+                    <input type="email" id="adminLoginEmail" placeholder="Enter admin email" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminLoginPassword">Password</label>
+                    <input type="password" id="adminLoginPassword" placeholder="Enter admin password" required>
+                </div>
+                <button type="submit" class="btn-primary">Log In as Admin</button>
+                <div style="text-align:center;margin-top:12px;">
+                    <a href="forgot-password.html" style="color:#b3b3b3;font-size:0.85em;">Forgot password?</a>
+                </div>
+            </form>
+
+            <!-- Admin Register Form -->
+            <form id="adminRegisterForm" class="auth-form" style="display:none;" onsubmit="handleAdminRegister(event)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+                    <a href="#" onclick="showRegularLogin()" style="color:#b3b3b3;font-size:0.85em;">← Back</a>
+                    <span style="color:#b3b3b3;font-size:0.85em;">Request Admin Access</span>
+                </div>
+                <div class="form-group">
+                    <label for="adminRegName">Full Name</label>
+                    <input type="text" id="adminRegName" placeholder="Enter full name" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminRegEmail">Email</label>
+                    <input type="email" id="adminRegEmail" placeholder="Enter email" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminRegPassword">Password</label>
+                    <input type="password" id="adminRegPassword" placeholder="Enter password (min 6 chars)" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminRegConfirm">Confirm Password</label>
+                    <input type="password" id="adminRegConfirm" placeholder="Confirm password" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminRegPet">Security Question 1: What is your pet's name?</label>
+                    <input type="text" id="adminRegPet" placeholder="Enter your pet's name" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminRegColor">Security Question 2: What is your favorite color?</label>
+                    <input type="text" id="adminRegColor" placeholder="Enter your favorite color" required>
+                </div>
+                <button type="submit" class="btn-primary">Request Admin Access</button>
+            </form>
+
+            <div class="auth-message" id="loginMessage"></div>
+
+            <div id="loginSuccessMessage" style="display: none; text-align: center;">
+                <h2 style="color: #1db954; font-size: 1.5em; margin-bottom: 20px;">✓ I have been logged in successfully!</h2>
+                <p style="color: #b3b3b3; margin-bottom: 15px;">Welcome back! You are now logged in.</p>
+                <p style="color: #fff; margin-bottom: 20px;">Redirecting to your dashboard...</p>
+                <div style="background: #282828; padding: 15px; border-radius: 6px; color: #1db954; font-weight: 600;" id="loginCountdownText">Redirecting...</div>
+            </div>
+
+            <div class="auth-footer" id="authFooter">
+                <p>Don't have an account? <a href="register.html">Sign up</a></p>
+                <a href="forgot-password.html">Forgot your password?</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('userId', data.userId);
+                    localStorage.setItem('fullName', data.fullName);
+                    localStorage.setItem('email', data.email);
+                    if (data.adminStatus && data.adminStatus !== 'none') {
+                        localStorage.setItem('isAdmin', 'true');
+                        localStorage.setItem('adminStatus', data.adminStatus);
+                    }
+                    
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('authAdminToggle').style.display = 'none';
+                    document.getElementById('authFooter').style.display = 'none';
+                    document.getElementById('loginSuccessMessage').style.display = 'block';
+                    messageDiv.style.display = 'none';
+                    
+                    window.location.href = 'dashboard.html';
+                } else {
+                    messageDiv.className = 'auth-message error';
+                    messageDiv.textContent = data.message || 'Login failed';
+                }
+            } catch (error) {
+                messageDiv.className = 'auth-message error';
+                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running on http://localhost:5000';
+                console.error('Error:', error);
+                console.log('Trying to connect to: http://localhost:5000/api/auth/login');
+                console.log('Error details:', error.message);
+            }
+        }
+
+        function showRegularLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('adminLoginForm').style.display = 'none';
+            document.getElementById('adminRegisterForm').style.display = 'none';
+            document.getElementById('authAdminToggle').style.display = 'block';
+            document.getElementById('loginMessage').className = 'auth-message';
+            document.getElementById('loginMessage').textContent = '';
+        }
+
+        function showAdminLogin() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminLoginForm').style.display = 'block';
+            document.getElementById('adminRegisterForm').style.display = 'none';
+            document.getElementById('authAdminToggle').style.display = 'none';
+            document.getElementById('loginMessage').className = 'auth-message';
+            document.getElementById('loginMessage').textContent = '';
+        }
+
+        function showAdminRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('adminLoginForm').style.display = 'none';
+            document.getElementById('adminRegisterForm').style.display = 'block';
+            document.getElementById('authAdminToggle').style.display = 'none';
+            document.getElementById('loginMessage').className = 'auth-message';
+            document.getElementById('loginMessage').textContent = '';
+        }
+
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('adminLoginEmail').value;
+            const password = document.getElementById('adminLoginPassword').value;
+            const messageDiv = document.getElementById('loginMessage');
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('userId', data.userId);
+                    localStorage.setItem('fullName', data.fullName);
+                    localStorage.setItem('email', data.email);
+                    localStorage.setItem('isAdmin', 'true');
+                    localStorage.setItem('adminStatus', data.adminStatus);
+                    
+                    document.getElementById('adminLoginForm').style.display = 'none';
+                    document.getElementById('authFooter').style.display = 'none';
+                    document.getElementById('loginSuccessMessage').style.display = 'block';
+                    messageDiv.style.display = 'none';
+                    
+                    window.location.href = 'dashboard.html';
+                } else {
+                    messageDiv.className = 'auth-message error';
+                    messageDiv.textContent = data.message || 'Admin login failed';
+                    if (data.status === 'pending') {
+                        messageDiv.className = 'auth-message';
+                        messageDiv.style.background = '#282828';
+                        messageDiv.style.color = '#ffa500';
+                        messageDiv.style.border = '1px solid #ffa500';
+                        messageDiv.textContent = data.message;
+                    }
+                }
+            } catch (error) {
+                messageDiv.className = 'auth-message error';
+                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running on http://localhost:5000';
+            }
+        }
+
+        async function handleAdminRegister(event) {
+            event.preventDefault();
+
+            const fullName = document.getElementById('adminRegName').value;
+            const email = document.getElementById('adminRegEmail').value;
+            const password = document.getElementById('adminRegPassword').value;
+            const confirmPassword = document.getElementById('adminRegConfirm').value;
+            const petName = document.getElementById('adminRegPet').value;
+            const favoriteColor = document.getElementById('adminRegColor').value;
+            const messageDiv = document.getElementById('loginMessage');
+
+            if (password !== confirmPassword) {
+                messageDiv.className = 'auth-message error';
+                messageDiv.textContent = 'Passwords do not match';
+                return;
+            }
+
+            if (password.length < 6) {
+                messageDiv.className = 'auth-message error';
+                messageDiv.textContent = 'Password must be at least 6 characters';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5000/api/auth/admin/request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fullName, email, password, confirmPassword, petName, favoriteColor })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageDiv.className = 'auth-message success';
+                    messageDiv.textContent = data.message || 'Admin access requested!';
+                    showAdminLogin();
+                    document.getElementById('adminLoginEmail').value = email;
+                } else {
+                    messageDiv.className = 'auth-message error';
+                    messageDiv.textContent = data.message || 'Request failed';
+                }
+            } catch (error) {
+                messageDiv.className = 'auth-message error';
+                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running on http://localhost:5000';
+            }
+        }
+    </script>
+</body>
+</html>
