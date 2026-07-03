@@ -23,16 +23,31 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/playlist', playlistRoutes);
 
-// Serve React build in production
+
 if (isProduction) {
-    app.use(express.static(path.join(__dirname, '../client/dist')));
+    app.use(express.static(path.join(__dirname, '../frontend')));
+
     app.use('/music', express.static(path.join(__dirname, '../frontend/music')));
     app.use('/images', express.static(path.join(__dirname, '../frontend/images')));
 
-    app.get('*', (req, res) => {
-        res.sendFile(
-            path.join(__dirname, '../client/dist/index.html')
-        );
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/login.html'));
+    });
+
+    app.get('/register', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/register.html'));
+    });
+
+    app.get('/forgot-password', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/forgot-password.html'));
+    });
+
+    app.get('/reset-password', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/reset-password.html'));
+    });
+
+    app.get('/dashboard', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/dashboard.html'));
     });
 } else {
     // Serve legacy frontend for development
