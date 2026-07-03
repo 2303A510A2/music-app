@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 package-lock.json
 client/package-lock.json
 backend/.env
@@ -11,6 +11,4 @@ client/node_modules/
 .vscode/
 .DS_Store
 *.log
-frontend/music/
-frontend/images/
 client/src/assets/
