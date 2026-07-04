@@ -1,0 +1,67 @@
+name: CI and Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - media-upload
+  pull_request:
+    branches:
+      - main
+      - media-upload
+
+jobs:
+  build:
+    name: Build Backend and Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install backend dependencies
+        run: npm install
+
+      - name: Install frontend dependencies
+        run: npm install --prefix client
+
+      - name: Build frontend
+        run: npm run build --prefix client
+
+      - name: Verify frontend build output
+        run: ls client/dist
+
+  deploy:
+    name: Deploy to Render
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/media-upload'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install --prefix client
+
+      - name: Build frontend
+        run: npm run build --prefix client
+
+      - name: Deploy to Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
+        run: |
+          if [ -z "${RENDER_API_KEY}" ] || [ -z "${RENDER_SERVICE_ID}" ]; then
+            echo "Render secrets not configured, skipping deploy."
+            exit 0
+          fi
+          echo "Render deployment can be triggered here if you have a deploy script or API command."
+          echo "Replace this step with the Render CLI or REST API call for your service."
