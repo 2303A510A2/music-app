@@ -54,7 +54,7 @@ jobs:
       - name: Build frontend
         run: npm run build --prefix client
 
-      - name: Deploy to Render
+      - name: Trigger Render deploy
         env:
           RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
           RENDER_SERVICE_ID: ${{ secrets.RENDER_SERVICE_ID }}
@@ -63,5 +63,11 @@ jobs:
             echo "Render secrets not configured, skipping deploy."
             exit 0
           fi
-          echo "Render deployment can be triggered here if you have a deploy script or API command."
-          echo "Replace this step with the Render CLI or REST API call for your service."
+          if [[ "${RENDER_SERVICE_ID}" != srv-* ]]; then
+            RENDER_SERVICE_ID="srv-${RENDER_SERVICE_ID}"
+          fi
+          echo "Triggering Render deploy for ${RENDER_SERVICE_ID}..."
+          curl -X POST "https://api.render.com/deploy/${RENDER_SERVICE_ID}/deploys" \
+            -H "Authorization: Bearer ${RENDER_API_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"clearCache": false}'
