@@ -87,7 +87,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/register', {
+                const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -121,9 +121,8 @@
                 }
             } catch (error) {
                 messageDiv.className = 'auth-message error';
-                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running on http://localhost:5000';
+                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running.';
                 console.error('Error:', error);
-                console.log('Trying to connect to: http://localhost:5000/api/auth/register');
                 console.log('Error details:', error.message);
             }
         }

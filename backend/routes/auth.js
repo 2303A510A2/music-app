@@ -215,7 +215,8 @@ router.post('/forgot-password', async (req, res) => {
 
     await new ResetToken({ email, token, expiresAt }).save();
 
-    const resetLink = `http://localhost:5000/reset-password.html?token=${token}`;
+    const baseUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 5000}`;
+    const resetLink = `${baseUrl}/reset-password.html?token=${token}`;
 
     if (process.env.SMTP_USER && process.env.SMTP_PASS) {
       const nodemailer = require('nodemailer');
@@ -237,7 +238,7 @@ router.post('/forgot-password', async (req, res) => {
           <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; background: #1e1e1e; padding: 30px; border-radius: 12px;">
             <h1 style="color: #1db954; text-align: center;">My Music</h1>
             <p style="color: #fff; font-size: 16px; text-align: center;">You requested a password reset. Enter your new password below.</p>
-            <form action="http://localhost:5000/api/auth/reset-from-email" method="POST" style="margin: 20px 0;">
+              <form action="${baseUrl}/api/auth/reset-from-email" method="POST" style="margin: 20px 0;">
               <input type="hidden" name="token" value="${token}">
               <div style="margin-bottom: 15px;">
                 <label for="newPassword" style="color: #fff; display: block; margin-bottom: 5px; font-size: 14px;">New Password</label>

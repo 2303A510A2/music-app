@@ -111,7 +111,7 @@
             const messageDiv = document.getElementById('loginMessage');
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/login', {
+                const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -143,9 +143,8 @@
                 }
             } catch (error) {
                 messageDiv.className = 'auth-message error';
-                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running on http://localhost:5000';
+                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running.';
                 console.error('Error:', error);
-                console.log('Trying to connect to: http://localhost:5000/api/auth/login');
                 console.log('Error details:', error.message);
             }
         }
@@ -185,7 +184,7 @@
             const messageDiv = document.getElementById('loginMessage');
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/admin/login', {
+                const response = await fetch('/api/auth/admin/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -221,7 +220,7 @@
                 }
             } catch (error) {
                 messageDiv.className = 'auth-message error';
-                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running on http://localhost:5000';
+                messageDiv.textContent = '❌ Connection error. Make sure the backend server is running.';
             }
         }
 
@@ -249,7 +248,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/admin/request', {
+                const response = await fetch('/api/auth/admin/request', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

@@ -77,8 +77,8 @@
         <button onclick="location.href='/'">Go to App</button>
 
         <div class="info">
-            <p><strong>Backend URL:</strong> http://localhost:5000</p>
-            <p><strong>API Endpoint:</strong> http://localhost:5000/api/auth</p>
+            <p><strong>Backend URL:</strong> <span id="backendUrl">/</span></p>
+            <p><strong>API Endpoint:</strong> <span id="apiEndpoint">/api/auth</span></p>
             <p id="testResult"></p>
         </div>
     </div>
@@ -98,7 +98,7 @@
             testResult.textContent = '';
 
             try {
-                const response = await fetch('http://localhost:5000/api/auth/user/1', {
+                const response = await fetch('/api/auth/user/1', {
                     method: 'GET'
                 });
 
