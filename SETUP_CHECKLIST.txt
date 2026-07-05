@@ -1,0 +1,151 @@
+====================================================================
+SETUP CHECKLIST - Follow Each Step
+====================================================================
+
+Check off each item as you complete it:
+
+BEFORE YOU START:
+=================
+☐ You have a web browser open (Chrome, Firefox, Edge, etc.)
+☐ You know where "Desktop\my music" folder is
+☐ You're ready to spend 5-10 minutes on setup
+
+
+STEP 1: OPEN TERMINAL
+=====================
+☐ Press Windows Key + R
+☐ Type: cmd
+☐ Press Enter
+☐ A terminal window appeared
+
+Expected: Black window with "C:\Users\YourName>"
+
+
+STEP 2: NAVIGATE TO PROJECT FOLDER
+===================================
+☐ Terminal is open
+☐ Copy this: cd Desktop\"my music"
+☐ Paste it into terminal
+☐ Press Enter
+
+Expected: Path changes to show "my music" in the path
+
+
+STEP 3: INSTALL DEPENDENCIES (First Time Only)
+===============================================
+☐ In terminal, type: npm install
+☐ Press Enter
+☐ Wait for 1-2 minutes
+☐ See message: "added XXX packages in XX seconds"
+
+Expected: Terminal shows "npm WARN" messages (this is normal) and finishes
+
+
+STEP 4: START THE SERVER
+========================
+☐ Type in terminal: npm start
+☐ Press Enter
+☐ Look for these messages in order:
+   ☐ "Connected to SQLite database"
+   ☐ "Users table ready"
+   ☐ "Playlists table ready"
+   ☐ "Songs table ready"
+   ☐ "Server running on http://localhost:5000"
+
+Expected: You see all 5 messages above
+⚠️ IMPORTANT: DO NOT CLOSE THE TERMINAL!
+
+
+STEP 5: OPEN YOUR BROWSER
+=========================
+☐ Open a new browser tab
+☐ In address bar, type: http://localhost:5000
+☐ Press Enter
+☐ See the login/register page
+
+Expected: You see "My Music" login page with "Sign up" and "Log In"
+
+
+STEP 6: CREATE YOUR ACCOUNT
+=============================
+☐ Click "Sign up"
+☐ Fill in Full Name: (your name)
+☐ Fill in Email: (your email)
+☐ Fill in Password: (6+ characters)
+☐ Fill in Confirm Password: (same password)
+☐ Click "Create Account"
+☐ See success message
+☐ Redirected to login page
+
+Expected: You see "Account created successfully!"
+
+
+STEP 7: LOGIN
+=============
+☐ On login page
+☐ Enter your email
+☐ Enter your password
+☐ Click "Log In"
+☐ See the dashboard with playlists
+
+Expected: You see 4 playlists: Telugu, English, Hindi, Folk
+
+
+SUCCESS! 🎵
+===========
+☐ You see the music dashboard
+☐ The terminal is still open (don't close it!)
+☐ You can click on playlists
+☐ You can search for songs
+☐ You can play songs
+
+
+IF SOMETHING GOES WRONG:
+========================
+
+Did you skip Steps 1-3?
+→ Go back and do them!
+
+Is terminal showing errors?
+→ Copy the error message
+→ Check COMPLETE_SERVER_SETUP.txt for troubleshooting
+
+Did "npm install" not work?
+→ Try again, sometimes it needs 2-3 tries
+→ Make sure you have internet connection
+
+Port 5000 already in use?
+→ Close other Node.js applications
+→ Or restart your computer
+
+Still getting "Connection error"?
+→ Make sure terminal shows "Server running on http://localhost:5000"
+→ Make sure you're using http:// (not https://)
+→ Refresh your browser (Press Ctrl+R or F5)
+
+Can't see playlists after login?
+→ Refresh the page (Press F5)
+→ Close browser completely and open again
+→ Check terminal for errors
+
+
+NEXT TIME (No npm install needed):
+==================================
+☐ Open terminal (Windows Key + R, cmd, Enter)
+☐ Navigate: cd Desktop\"my music"
+☐ Start: npm start
+☐ Wait for: "Server running on http://localhost:5000"
+☐ Open browser: http://localhost:5000
+
+
+REMEMBER:
+=========
+✓ Keep terminal open while using app
+✓ Press Ctrl+C to stop server when done
+✓ Next time, skip "npm install" step
+✓ Terminal must show all 5 messages from Step 4
+
+
+YOU DID IT! 🎉
+==============
+Congratulations! Your music app is running!

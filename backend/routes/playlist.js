@@ -1,68 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
 const User = require('../models/User');
 const Playlist = require('../models/Playlist');
-
-// Sanitize filename: replace Windows-illegal chars and trim
-function safeFilename(original) {
-  return original.replace(/[\\/:*?"<>|]/g, '_').trim();
-}
-
-// Multer config for MP3 uploads
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, '../../frontend/music'),
-  filename: (req, file, cb) => {
-    cb(null, safeFilename(file.originalname));
-  }
-});
-const upload = multer({
-  storage,
-  limits: { fileSize: 50 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    if (!file.originalname.toLowerCase().endsWith('.mp3')) {
-      return cb(new Error('Only MP3 files allowed'));
-    }
-    cb(null, true);
-  }
-});
-
-// Middleware to catch Multer errors and return JSON
-function handleMulterError(err, req, res, next) {
-  if (err instanceof multer.MulterError) {
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ message: 'File too large. Maximum size is 50MB.' });
-    }
-    return res.status(400).json({ message: err.message });
-  }
-  if (err) {
-    return res.status(400).json({ message: err.message });
-  }
-  next();
-}
-
-// Multer config for image uploads
-const imageStorage = multer.diskStorage({
-  destination: path.join(__dirname, '../../frontend/images'),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + '-' + file.originalname);
-  }
-});
-const uploadImage = multer({
-  storage: imageStorage,
-  limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (!allowedExtensions.includes(ext)) {
-      return cb(new Error('Only image files (jpg, jpeg, png, gif, svg, webp) are allowed'));
-    }
-    cb(null, true);
-  }
-});
+const upload = require('../middleware/upload');
 
 // Admin creates a global playlist (visible to all users)
 router.post('/admin-create', async (req, res) => {
@@ -139,6 +79,41 @@ router.post('/admin-delete', async (req, res) => {
 router.post('/admin-add-song-url', async (req, res) => {
   try {
     const { adminEmail, playlistId, songName, songUrl, songImage } = req.body;
+    console.log('admin-add-song-url: received', { playlistId, songName, songUrl: songUrl?.slice(0, 50), songImage: songImage?.slice(0, 50) });
+
+    if (!adminEmail || !playlistId || !songName || !songName.trim()) {
+      return res.status(400).json({ message: 'Admin email, playlist ID, and song name are required' });
+    }
+    const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
+    if (!admin) {
+      return res.status(403).json({ message: 'Only approved admins can add songs to global playlists' });
+    }
+    let playlist;
+    try {
+      playlist = await Playlist.findOne({ _id: playlistId, isGlobal: true });
+    } catch (castErr) {
+      return res.status(400).json({ message: 'Invalid playlist ID' });
+    }
+    if (!playlist) {
+      return res.status(404).json({ message: 'Global playlist not found' });
+    }
+    if (!songUrl || !songUrl.trim()) {
+      return res.status(400).json({ message: 'Song URL is required' });
+    }
+    playlist.songs.push({ songName: songName.trim(), songUrl: songUrl.trim(), songImage: songImage || '' });
+    await playlist.save();
+    console.log('admin-add-song-url: saved to MongoDB —', songName);
+    res.json({ message: 'Song added to global playlist', playlist });
+  } catch (err) {
+    console.error('Error adding song to global playlist (URL):', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Admin add song — File mode (accepts songUrl from body)
+router.post('/admin-add-song', async (req, res) => {
+  try {
+    const { adminEmail, playlistId, songName, songUrl, songImage } = req.body;
     if (!adminEmail || !playlistId || !songName || !songName.trim()) {
       return res.status(400).json({ message: 'Admin email, playlist ID, and song name are required' });
     }
@@ -162,193 +137,118 @@ router.post('/admin-add-song-url', async (req, res) => {
     await playlist.save();
     res.json({ message: 'Song added to global playlist', playlist });
   } catch (err) {
-    console.error('Error adding song to global playlist (URL):', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
-
-// Admin add song — File mode (multipart with MP3 upload)
-router.post('/admin-add-song', (req, res, next) => {
-  upload.single('file')(req, res, (err) => {
-    if (err) return handleMulterError(err, req, res, next);
-    next();
-  });
-}, async (req, res) => {
-  try {
-    const { adminEmail, playlistId, songName, songImage } = req.body;
-    if (!adminEmail || !playlistId || !songName || !songName.trim()) {
-      if (req.file) try { fs.unlinkSync(req.file.path); } catch (_) {}
-      return res.status(400).json({ message: 'Admin email, playlist ID, and song name are required' });
-    }
-    const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
-    if (!admin) {
-      if (req.file) try { fs.unlinkSync(req.file.path); } catch (_) {}
-      return res.status(403).json({ message: 'Only approved admins can add songs to global playlists' });
-    }
-    let playlist;
-    try {
-      playlist = await Playlist.findOne({ _id: playlistId, isGlobal: true });
-    } catch (castErr) {
-      if (req.file) try { fs.unlinkSync(req.file.path); } catch (_) {}
-      return res.status(400).json({ message: 'Invalid playlist ID' });
-    }
-    if (!playlist) {
-      if (req.file) try { fs.unlinkSync(req.file.path); } catch (_) {}
-      return res.status(404).json({ message: 'Global playlist not found' });
-    }
-    if (!req.file) {
-      return res.status(400).json({ message: 'No MP3 file uploaded' });
-    }
-    const finalUrl = `music/${req.file.filename}`;
-    playlist.songs.push({ songName: songName.trim(), songUrl: finalUrl, songImage: songImage || '' });
-    await playlist.save();
-    res.json({ message: 'Song added to global playlist', playlist });
-  } catch (err) {
     console.error('Error adding song to global playlist (file):', err);
-    if (req.file) {
-      try { fs.unlinkSync(req.file.path); } catch (_) {}
-    }
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Upload an MP3 file to the server (for local playlists, admin only)
-router.post('/upload-file', (req, res, next) => {
-  upload.single('file')(req, res, (err) => {
-    if (err) return handleMulterError(err, req, res, next);
-    next();
-  });
-}, async (req, res) => {
+// Upload an MP3 file URL (for local playlists, admin only)
+router.post('/upload-file', async (req, res) => {
   try {
-    const { adminEmail, songName } = req.body;
-    if (!adminEmail || !songName || !songName.trim()) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'Admin email and song name are required' });
+    const { adminEmail, songUrl } = req.body;
+    if (!adminEmail || !songUrl || !songUrl.trim()) {
+      return res.status(400).json({ message: 'Admin email and song URL are required' });
     }
     const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
     if (!admin) {
-      if (req.file) fs.unlinkSync(req.file.path);
       return res.status(403).json({ message: 'Only approved admins can upload files' });
     }
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-    res.json({ message: 'File uploaded', fileName: req.file.filename });
+    res.json({ message: 'File uploaded', fileName: songUrl });
   } catch (err) {
     console.error('Error uploading file:', err);
-    if (req.file) {
-      try { fs.unlinkSync(req.file.path); } catch (_) {}
-    }
     res.status(500).json({ message: 'Internal server error' });
   }
 });
 
-// Copy a file from a local path to the music directory
-router.post('/copy-from-path', async (req, res) => {
-  try {
-    const { adminEmail, filePath } = req.body;
-    if (!adminEmail || !filePath) {
-      return res.status(400).json({ message: 'Admin email and file path are required' });
-    }
-    const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
-    if (!admin) {
-      return res.status(403).json({ message: 'Only approved admins can add songs' });
-    }
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: 'File not found at the given path' });
-    }
-    const fileName = safeFilename(path.basename(filePath));
-    const destPath = path.join(__dirname, '../../frontend/music', fileName);
-    if (!fs.existsSync(destPath)) {
-      fs.copyFileSync(filePath, destPath);
-    }
-    res.json({ message: 'File uploaded', fileName, url: `music/${fileName}` });
-  } catch (err) {
-    console.error('Error copying file from path:', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
+
 
 // Upload a cover image for a playlist (admin only)
-router.post('/upload-cover', uploadImage.single('file'), async (req, res) => {
+// Accepts: multipart/form-data with a file (field name "file" or "image"), or JSON with imageUrl
+router.post('/upload-cover', (req, res, next) => {
+  const ct = req.headers['content-type'] || '';
+  if (ct.includes('multipart')) {
+    upload.single('file')(req, res, (err) => {
+      if (err) {
+        console.error('Upload-cover multer error:', err);
+        return res.status(400).json({ message: err.message || 'Upload failed', imageUrl: '' });
+      }
+      next();
+    });
+  } else {
+    next();
+  }
+}, async (req, res) => {
   try {
-    const { adminEmail } = req.body;
+    const { adminEmail, imageUrl } = req.body;
     if (!adminEmail) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'Admin email is required' });
+      return res.status(400).json({ message: 'Admin email is required', imageUrl: '' });
     }
     const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
     if (!admin) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(403).json({ message: 'Only approved admins can upload images' });
+      return res.status(403).json({ message: 'Only approved admins can upload images', imageUrl: '' });
     }
-    if (!req.file) {
-      return res.status(400).json({ message: 'No image file uploaded' });
+    // If file was uploaded via multer, use its Cloudinary URL
+    if (req.file) {
+      const url = req.file.path || '';
+      if (!url) {
+        return res.status(500).json({ message: 'Cloudinary upload failed', imageUrl: '' });
+      }
+      console.log('Cover image uploaded to Cloudinary:', url);
+      return res.json({ message: 'Image uploaded', imageUrl: url });
     }
-    const imageUrl = `images/${req.file.filename}`;
+    // Otherwise, use the URL from JSON body
+    if (!imageUrl || !imageUrl.trim()) {
+      return res.status(400).json({ message: 'Image URL or file is required', imageUrl: '' });
+    }
     res.json({ message: 'Image uploaded', imageUrl });
   } catch (err) {
     console.error('Error uploading cover image:', err);
-    if (req.file) {
-      try { fs.unlinkSync(req.file.path); } catch (_) {}
-    }
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', imageUrl: '' });
   }
 });
 
-// Copy a cover image from a local file path (admin only)
-router.post('/copy-cover-path', async (req, res) => {
-  try {
-    const { adminEmail, filePath } = req.body;
-    if (!adminEmail || !filePath) {
-      return res.status(400).json({ message: 'Admin email and file path are required' });
-    }
-    const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
-    if (!admin) {
-      return res.status(403).json({ message: 'Only approved admins can add images' });
-    }
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: 'File not found at the given path' });
-    }
-    const ext = path.extname(filePath).toLowerCase();
-    const allowed = ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.webp'];
-    if (!allowed.includes(ext)) {
-      return res.status(400).json({ message: 'Only image files (jpg, jpeg, png, gif, svg, webp) are allowed' });
-    }
-    const fileName = Date.now() + '-' + path.basename(filePath);
-    const destPath = path.join(__dirname, '../../frontend/images', fileName);
-    fs.copyFileSync(filePath, destPath);
-    res.json({ message: 'Image uploaded', imageUrl: `images/${fileName}` });
-  } catch (err) {
-    console.error('Error copying image from path:', err);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-});
 
-// Upload a song image file (admin only)
-router.post('/upload-song-image', uploadImage.single('file'), async (req, res) => {
+
+// Upload a song image (admin only)
+// Accepts: multipart/form-data with a file (field name "file" or "image"), or JSON with imageUrl
+router.post('/upload-song-image', (req, res, next) => {
+  const ct = req.headers['content-type'] || '';
+  if (ct.includes('multipart')) {
+    upload.single('file')(req, res, (err) => {
+      if (err) {
+        console.error('Upload-song-image multer error:', err);
+        return res.status(400).json({ message: err.message || 'Upload failed', imageUrl: '' });
+      }
+      next();
+    });
+  } else {
+    next();
+  }
+}, async (req, res) => {
   try {
-    const { adminEmail } = req.body;
+    const { adminEmail, imageUrl } = req.body;
     if (!adminEmail) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(400).json({ message: 'Admin email is required' });
+      return res.status(400).json({ message: 'Admin email is required', imageUrl: '' });
     }
     const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
     if (!admin) {
-      if (req.file) fs.unlinkSync(req.file.path);
-      return res.status(403).json({ message: 'Only approved admins can upload images' });
+      return res.status(403).json({ message: 'Only approved admins can upload images', imageUrl: '' });
     }
-    if (!req.file) {
-      return res.status(400).json({ message: 'No image file uploaded' });
+    if (req.file) {
+      const url = req.file.path || '';
+      if (!url) {
+        return res.status(500).json({ message: 'Cloudinary upload failed', imageUrl: '' });
+      }
+      console.log('Song image uploaded to Cloudinary:', url);
+      return res.json({ message: 'Image uploaded', imageUrl: url });
     }
-    const imageUrl = `images/${req.file.filename}`;
+    if (!imageUrl || !imageUrl.trim()) {
+      return res.status(400).json({ message: 'Image URL or file is required', imageUrl: '' });
+    }
     res.json({ message: 'Image uploaded', imageUrl });
   } catch (err) {
     console.error('Error uploading song image:', err);
-    if (req.file) {
-      try { fs.unlinkSync(req.file.path); } catch (_) {}
-    }
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', imageUrl: '' });
   }
 });
 
@@ -356,27 +256,34 @@ router.post('/upload-song-image', uploadImage.single('file'), async (req, res) =
 router.post('/admin-remove-song', async (req, res) => {
   try {
     const { adminEmail, playlistId, songName } = req.body;
+    console.log('[DELETE SONG] admin-remove-song request:', { adminEmail, playlistId, songName });
+
     if (!adminEmail || !playlistId || !songName) {
-      return res.status(400).json({ message: 'Admin email, playlist ID, and song name are required' });
+      console.log('[DELETE SONG] Missing required fields');
+      return res.status(400).json({ success: false, message: 'Admin email, playlist ID, and song name are required' });
     }
     const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
     if (!admin) {
-      return res.status(403).json({ message: 'Only approved admins can remove songs from global playlists' });
+      console.log('[DELETE SONG] Admin not found or unauthorized:', adminEmail);
+      return res.status(403).json({ success: false, message: 'Only approved admins can remove songs from global playlists' });
     }
     const playlist = await Playlist.findOne({ _id: playlistId, isGlobal: true });
     if (!playlist) {
-      return res.status(404).json({ message: 'Global playlist not found' });
+      console.log('[DELETE SONG] Global playlist not found:', playlistId);
+      return res.status(404).json({ success: false, message: 'Global playlist not found' });
     }
     const idx = playlist.songs.findIndex(s => s.songName === songName);
     if (idx === -1) {
-      return res.status(404).json({ message: 'Song not found in this playlist' });
+      console.log('[DELETE SONG] Song not found in playlist:', songName);
+      return res.status(404).json({ success: false, message: 'Song not found in this playlist' });
     }
     playlist.songs.splice(idx, 1);
     await playlist.save();
-    res.json({ message: 'Song removed from global playlist', playlist });
+    console.log('[DELETE SONG] Successfully deleted:', songName, 'from playlist:', playlistId);
+    res.json({ success: true, message: 'Song deleted successfully' });
   } catch (err) {
-    console.error('Error removing song from global playlist:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('[DELETE SONG] Error removing song from global playlist:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 
@@ -473,23 +380,29 @@ router.post('/user-add-song', async (req, res) => {
 router.post('/user-remove-song', async (req, res) => {
   try {
     const { userId, playlistId, songName } = req.body;
+    console.log('[DELETE SONG] user-remove-song request:', { userId, playlistId, songName });
+
     if (!userId || !playlistId || !songName) {
-      return res.status(400).json({ message: 'User ID, playlist ID, and song name are required' });
+      console.log('[DELETE SONG] Missing required fields');
+      return res.status(400).json({ success: false, message: 'User ID, playlist ID, and song name are required' });
     }
     const playlist = await Playlist.findOne({ _id: playlistId, userId, isGlobal: false });
     if (!playlist) {
-      return res.status(404).json({ message: 'Playlist not found' });
+      console.log('[DELETE SONG] User playlist not found:', playlistId);
+      return res.status(404).json({ success: false, message: 'Playlist not found' });
     }
     const idx = playlist.songs.findIndex(s => s.songName === songName);
     if (idx === -1) {
-      return res.status(404).json({ message: 'Song not found in this playlist' });
+      console.log('[DELETE SONG] Song not found in user playlist:', songName);
+      return res.status(404).json({ success: false, message: 'Song not found in this playlist' });
     }
     playlist.songs.splice(idx, 1);
     await playlist.save();
-    res.json({ message: 'Song removed from playlist', playlist });
+    console.log('[DELETE SONG] Successfully deleted:', songName, 'from user playlist:', playlistId);
+    res.json({ success: true, message: 'Song deleted successfully' });
   } catch (err) {
-    console.error('Error removing song from user playlist:', err);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('[DELETE SONG] Error removing song from user playlist:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

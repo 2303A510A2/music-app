@@ -1,6 +1,6 @@
 // Frontend authentication helper functions
 
-const API_ROOT = 'http://localhost:5000';
+const API_ROOT = '';
 const API_BASE_URL = `${API_ROOT}/api/auth`;
 
 // Store user data in localStorage

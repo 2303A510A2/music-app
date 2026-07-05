@@ -3,8 +3,11 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const bodyParser = require('body-parser');
+
 const authRoutes = require('./routes/auth');
 const playlistRoutes = require('./routes/playlist');
+const uploadRoutes = require('./routes/upload'); // NEW
+
 const connectDB = require('./database');
 
 const app = express();
@@ -22,7 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/playlist', playlistRoutes);
-
+app.use('/api/upload', uploadRoutes); // NEW
 
 if (isProduction) {
     app.use(express.static(path.join(__dirname, '../frontend')));
@@ -49,8 +52,9 @@ if (isProduction) {
     app.get('/dashboard', (req, res) => {
         res.sendFile(path.join(__dirname, '../frontend/dashboard.html'));
     });
+
 } else {
-    // Serve legacy frontend for development
+
     app.use(
         express.static(path.join(__dirname, '../frontend'), {
             maxAge: 0
@@ -76,19 +80,28 @@ if (isProduction) {
     app.get('/dashboard', (req, res) => {
         res.sendFile(path.join(__dirname, '../frontend/dashboard.html'));
     });
+
 }
 
 // Health check route
 app.get('/health', (req, res) => {
-    res.status(200).send('Server is running');
+    res.json({ success: true, message: 'Server is running' });
 });
 
-// Error handler
+// 404 — return JSON for any unmatched API route
+app.use('/api', (req, res) => {
+    res.status(404).json({ success: false, message: 'API route not found' });
+});
+
+// Error handler — always return JSON
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({
-        message: 'Internal server error'
-    });
+    console.error('Server error:', err?.message || err || 'Unknown error');
+    if (!res.headersSent) {
+        res.status(500).json({
+            success: false,
+            message: err?.message || 'Internal server error'
+        });
+    }
 });
 
 // Connect DB and start server

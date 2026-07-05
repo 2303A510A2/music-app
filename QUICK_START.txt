@@ -1,0 +1,69 @@
+=====================================
+QUICK FIX - ACCOUNT CREATION ERROR
+=====================================
+
+The "Connection error" means the backend server is NOT running.
+
+SOLUTION - 3 EASY STEPS:
+========================
+
+STEP 1: Open Terminal
+-------
+- Press Windows Key + R
+- Type: cmd
+- Press Enter
+
+STEP 2: Go to Project Folder
+-------
+Type this and press Enter:
+  cd Desktop\my music
+
+STEP 3: Install and Start
+-------
+Type this and press Enter:
+  npm install && npm start
+
+Wait until you see:
+  "Server running on http://localhost:5000"
+
+Then go to browser and open:
+  http://localhost:5000
+
+
+THAT'S IT!
+==========
+Now you can:
+✓ Create a new account
+✓ Login
+✓ Use the music app
+
+
+WHAT IF IT DOESN'T WORK?
+========================
+
+Problem 1: "npm: command not found"
+Solution: Download Node.js from https://nodejs.org and install it
+          Then restart your computer and try again
+
+Problem 2: "Port 5000 already in use"
+Solution: Close other applications using port 5000
+          Or check if another copy of this app is running
+
+Problem 3: Still getting connection error
+Solution: Go to http://localhost:5000/test.html
+          This will test if the server is working
+          Then refresh http://localhost:5000
+
+
+NEVER CLOSE THE TERMINAL!
+=========================
+Keep the terminal window open while using the app.
+When you're done, press Ctrl+C in the terminal to stop the server.
+
+
+NEED MORE HELP?
+===============
+Open SETUP_GUIDE.txt for detailed instructions
+Or check INSTALL_AND_RUN.bat to auto-install
+
+Good luck! 🎵

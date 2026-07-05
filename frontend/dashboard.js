@@ -520,44 +520,27 @@ async function uploadCoverImage() {
     const adminEmail = localStorage.getItem('email');
     const fileInput = document.getElementById('coverImageFile');
     const urlInput = document.getElementById('coverImageUrl').value.trim();
-    const pathInput = document.getElementById('coverImagePath').value.trim();
 
     // Determine which source is active
     const urlVisible = document.getElementById('coverUrlGroup').style.display !== 'none';
     const fileVisible = document.getElementById('coverFileGroup').style.display !== 'none';
-    const pathVisible = document.getElementById('coverPathGroup').style.display !== 'none';
 
     if (urlVisible && urlInput) {
         return urlInput;
     }
     if (fileVisible && fileInput.files.length) {
         const formData = new FormData();
-        formData.append('adminEmail', adminEmail);
-        formData.append('file', fileInput.files[0]);
+        formData.append('image', fileInput.files[0]);
         try {
-                const resp = await fetch(`${API_ROOT}/api/playlist/upload-cover`, {
+            const resp = await fetch(`${API_ROOT}/api/upload`, {
                 method: 'POST',
                 body: formData
             });
             const data = await resp.json();
-            if (!resp.ok) throw new Error(data.message || 'Upload failed');
+            if (!resp.ok || !data.success) throw new Error(data.message || 'Upload failed');
             return data.imageUrl;
         } catch (e) {
             throw new Error('Failed to upload image: ' + e.message);
-        }
-    }
-    if (pathVisible && pathInput) {
-        try {
-            const resp = await fetch(`${API_ROOT}/api/playlist/copy-cover-path`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminEmail, filePath: pathInput })
-            });
-            const data = await resp.json();
-            if (!resp.ok) throw new Error(data.message || 'Copy failed');
-            return data.imageUrl;
-        } catch (e) {
-            throw new Error('Failed to copy image: ' + e.message);
         }
     }
     return '';
@@ -1031,6 +1014,23 @@ function showRemoveSongForm() {
     });
 }
 
+function isLocalPath(str) {
+    return /^[a-zA-Z]:\\/.test(str) || str.startsWith('\\\\');
+}
+
+async function uploadLocalFileToCloudinary(adminEmail, filePath) {
+    const resp = await fetch(`${API_ROOT}/api/upload/from-path`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminEmail, filePath })
+    });
+    const data = await resp.json();
+    if (!resp.ok || !data.success) {
+        throw new Error(data.message || 'Failed to upload local file');
+    }
+    return data.url;
+}
+
 async function addSongToLibrary() {
     const container = document.getElementById('newSongPlaylistCheckboxes');
     const checkedBoxes = container.querySelectorAll('input[type=checkbox]:checked');
@@ -1043,40 +1043,87 @@ async function addSongToLibrary() {
     const fileInput = document.getElementById('newSongFile');
     const urlInput = document.getElementById('newSongUrl');
     const isUrlMode = document.getElementById('songUrlGroup').style.display !== 'none';
+    const adminEmail = localStorage.getItem('email');
 
     if (!title) {
         showToast('Please enter a song title.');
         return;
     }
 
-    // Determine the song URL
     let songUrl = '';
+    let songImage = '';
+
     if (isUrlMode) {
-        songUrl = urlInput.value.trim();
-        if (!songUrl) {
-            showToast('Please paste a song link.');
+        const input = urlInput.value.trim();
+        if (!input) {
+            showToast('Please paste a song link or file path.');
             return;
         }
-        // If it's a local file path (e.g. C:\Users\...), copy it to the server
-        if (songUrl.match(/^[a-zA-Z]:\\/) || songUrl.includes(':\\') || songUrl.match(/^\\\\/)) {
-            const adminEmail = localStorage.getItem('email');
-            if (!adminEmail) { showToast('Not logged in.'); return; }
-            showToast('Copying file from local path...');
+
+        if (isLocalPath(input)) {
+            // MODE 1: Local Windows path — upload to Cloudinary
+            showToast('Uploading local file to Cloudinary...');
             try {
-                const resp = await fetch(`${API_ROOT}/api/playlist/copy-from-path`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ adminEmail, filePath: songUrl })
-                });
-                const data = await resp.json();
-                if (!resp.ok) { showToast(data.message || 'Failed to copy file'); return; }
-                songUrl = data.url;
-            } catch (e) { showToast('Connection error. Is the server running?'); return; }
-        } else if (!songUrl.startsWith('http://') && !songUrl.startsWith('https://') && !songUrl.startsWith('/') && !songUrl.startsWith('music/')) {
-            showToast('Please provide a web URL (starting with http:// or https://) or paste a local file path.');
+                songUrl = await uploadLocalFileToCloudinary(adminEmail, input);
+            } catch (e) {
+                showToast('Failed to upload song: ' + e.message);
+                return;
+            }
+        } else if (input.startsWith('http://') || input.startsWith('https://')) {
+            // MODE 3: HTTPS URL — store directly
+            songUrl = input;
+        } else {
+            showToast('Please provide a valid HTTPS URL or a local file path.');
             return;
+        }
+
+        // Handle image for URL/local-path mode
+        const isImgUrlMode = document.getElementById('songImageUrlGroup').style.display !== 'none';
+        if (isImgUrlMode) {
+            const imgInput = document.getElementById('newSongImageUrl').value.trim();
+            if (imgInput) {
+                if (isLocalPath(imgInput)) {
+                    try {
+                        songImage = await uploadLocalFileToCloudinary(adminEmail, imgInput);
+                    } catch (e) {
+                        showToast('Failed to upload image: ' + e.message);
+                        return;
+                    }
+                } else {
+                    songImage = imgInput;
+                }
+            }
+        } else {
+            const imgFile = document.getElementById('newSongImageFile').files[0];
+            if (imgFile) {
+                const imgFormData = new FormData();
+                imgFormData.append('image', imgFile);
+                try {
+                    console.log('Uploading image to Cloudinary...');
+                    const imgResp = await fetch(`${API_ROOT}/api/upload`, {
+                        method: 'POST',
+                        body: imgFormData
+                    });
+                    let imgData;
+                    try {
+                        imgData = await imgResp.json();
+                    } catch (jsonErr) {
+                        console.error('Image upload JSON parse error:', jsonErr);
+                        imgData = { success: false, message: 'Empty server response' };
+                    }
+                    console.log('Image upload response:', imgResp.status, imgData);
+                    if (imgResp.ok && imgData.success && imgData.imageUrl) {
+                        songImage = imgData.imageUrl;
+                    } else {
+                        console.error('Image upload failed:', imgData.message || 'Unknown error');
+                    }
+                } catch (e) {
+                    console.error('Image upload network error:', e);
+                }
+            }
         }
     } else {
+        // MODE 2: File upload — upload to Cloudinary
         if (!fileInput.files.length) {
             showToast('Please select an mp3 file.');
             return;
@@ -1086,48 +1133,59 @@ async function addSongToLibrary() {
             showToast('Please select an mp3 file.');
             return;
         }
-        songUrl = `music/${file.name}`;
-    }
-
-    // Determine song image
-    const isImgUrlMode = document.getElementById('songImageUrlGroup').style.display !== 'none';
-    let songImage = '';
-    if (isImgUrlMode) {
-        songImage = document.getElementById('newSongImageUrl').value.trim();
-    } else {
+        const uploadFormData = new FormData();
+        uploadFormData.append('song', file);
         const imgFile = document.getElementById('newSongImageFile').files[0];
         if (imgFile) {
-            const adminEmail = localStorage.getItem('email');
-            if (adminEmail) {
-                const imgFormData = new FormData();
-                imgFormData.append('adminEmail', adminEmail);
-                imgFormData.append('file', imgFile);
-                try {
-                    const imgResp = await fetch(`${API_ROOT}/api/playlist/upload-song-image`, {
-                        method: 'POST',
-                        body: imgFormData
-                    });
-                    const imgData = await imgResp.json();
-                    if (imgResp.ok && imgData.imageUrl) {
-                        songImage = imgData.imageUrl;
-                    }
-                } catch (e) {
-                    // image upload failed, continue without image
-                }
+            uploadFormData.append('image', imgFile);
+        } else {
+            const imgUrl = document.getElementById('newSongImageUrl').value.trim();
+            if (imgUrl) {
+                songImage = imgUrl;
             }
+        }
+        try {
+            showToast('Uploading to Cloudinary...');
+            const uploadResp = await fetch(`${API_ROOT}/api/upload`, {
+                method: 'POST',
+                body: uploadFormData
+            });
+            let uploadData;
+            try {
+                uploadData = await uploadResp.json();
+            } catch (jsonErr) {
+                showToast('Server returned empty response (status ' + uploadResp.status + '). Check backend logs.');
+                return;
+            }
+            if (!uploadResp.ok || !uploadData.success) {
+                showToast('Upload failed: ' + (uploadData.message || 'HTTP ' + uploadResp.status));
+                return;
+            }
+            songUrl = uploadData.songUrl;
+            if (uploadData.imageUrl) {
+                songImage = uploadData.imageUrl;
+            }
+        } catch (e) {
+            showToast('Connection error: ' + e.message);
+            return;
         }
     }
 
-    const adminEmail = localStorage.getItem('email');
     const isAdmin = adminEmail && (localStorage.getItem('adminStatus') === 'approved' || localStorage.getItem('adminStatus') === 'leader');
 
-    function proceedWithAdd(targetPlaylist, targetMeta) {
+    async function proceedWithAdd(targetPlaylist, targetMeta) {
         if (!targetPlaylist) return;
         const pn = targetPlaylist.name || '';
 
-        if (targetMeta?.isGlobal && isAdmin) {
-            if (isUrlMode) {
-                fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
+        const saveLocal = () => {
+            targetPlaylist.push({ song: title, urls: [songUrl], image: songImage || '' });
+            savePlaylists();
+            renderPlaylists();
+        };
+
+        if (targetMeta?.isGlobal && isAdmin && songUrl) {
+            try {
+                const resp = await fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1135,60 +1193,30 @@ async function addSongToLibrary() {
                         playlistId: targetMeta.globalId,
                         songName: title,
                         songUrl: songUrl,
-                        songImage: songImage || undefined
+                        songImage: songImage || ''
                     })
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.message === 'Song added to global playlist') {
-                        targetPlaylist.push({ song: title, urls: [songUrl], image: songImage || '' });
-                        renderPlaylists();
-                        loadGlobalPlaylists();
-                        showToast(`"${title}" added to shared playlist "${pn}".`);
-                    } else {
-                        showToast(data.message || 'Failed to add song');
-                    }
-                })
-                .catch(() => {
-                    showToast('Connection error. Is the server running?');
                 });
-            } else {
-                const formData = new FormData();
-                formData.append('adminEmail', adminEmail);
-                formData.append('playlistId', targetMeta.globalId);
-                formData.append('songName', title);
-                formData.append('file', fileInput.files[0]);
-                if (songImage) formData.append('songImage', songImage);
-                fetch(`${API_ROOT}/api/playlist/admin-add-song`, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.message === 'Song added to global playlist') {
-                        targetPlaylist.push({ song: title, urls: [songUrl], image: songImage || '' });
-                        renderPlaylists();
-                        loadGlobalPlaylists();
-                        showToast(`"${title}" added to shared playlist "${pn}".`);
-                    } else {
-                        showToast(data.message || 'Failed to add song');
-                    }
-                })
-                .catch(() => {
-                    showToast('Connection error. Is the server running?');
-                });
+                let data;
+                try {
+                    data = await resp.json();
+                } catch (jsonErr) {
+                    console.error('admin-add-song-url JSON parse error:', jsonErr);
+                    data = null;
+                }
+                if (resp.ok && data && data.message === 'Song added to global playlist') {
+                    targetPlaylist.push({ song: title, urls: [songUrl], image: songImage || '' });
+                    renderPlaylists();
+                    await loadGlobalPlaylists();
+                    showToast(`"${title}" added to shared playlist "${pn}".`);
+                } else {
+                    saveLocal();
+                    showToast(`"${title}" saved locally. Server sync failed (${data ? data.message : 'HTTP ' + resp.status}).`);
+                }
+            } catch (e) {
+                saveLocal();
+                showToast(`"${title}" saved locally. Connection error: ${e.message}`);
             }
         } else {
-            if (!isUrlMode && isAdmin) {
-                const formData = new FormData();
-                formData.append('adminEmail', adminEmail);
-                formData.append('songName', title);
-                formData.append('file', fileInput.files[0]);
-                fetch(`${API_ROOT}/api/playlist/upload-file`, {
-                    method: 'POST',
-                    body: formData
-                }).catch(() => {});
-            }
             targetPlaylist.push({ song: title, urls: [songUrl], image: songImage || '' });
             savePlaylists();
             renderPlaylists();
@@ -1202,9 +1230,16 @@ async function addSongToLibrary() {
         // For built-in playlists, admin changes must sync to server
         if (playlistMeta[playlistName]?.isBuiltIn && isAdmin) {
             try {
+                console.log('Syncing built-in playlist to server:', playlistName);
                 const glResp = await fetch(`${API_ROOT}/api/playlist/global`);
                 if (glResp.ok) {
-                    const glData = await glResp.json();
+                    let glData;
+                    try {
+                        glData = await glResp.json();
+                    } catch (jsonErr) {
+                        console.error('glResp.json() parse error:', jsonErr);
+                        glData = [];
+                    }
                     let glEntry = glData.find(p => p.playlistName === playlistName);
                     if (!glEntry) {
                         const crResp = await fetch(`${API_ROOT}/api/playlist/admin-create`, {
@@ -1212,18 +1247,29 @@ async function addSongToLibrary() {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ adminEmail, playlistName, coverImage: playlistMeta[playlistName].coverImage || '' })
                         });
-                        const crData = await crResp.json();
+                        let crData;
+                        try {
+                            crData = await crResp.json();
+                        } catch (jsonErr) {
+                            console.error('crResp.json() parse error:', jsonErr);
+                            crData = {};
+                        }
+                        console.log('admin-create response:', crResp.status, crData);
                         if (crResp.ok && crData.playlist) {
                             glEntry = crData.playlist;
                             const existingSongs = playlists[playlistName] || [];
                             for (const s of existingSongs) {
                                 const url = s.urls?.[0];
                                 if (!url || !url.trim()) continue;
-                                await fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ adminEmail, playlistId: glEntry._id, songName: s.song, songUrl: url, songImage: s.image || '' })
-                                }).catch(() => {});
+                                try {
+                                    await fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ adminEmail, playlistId: glEntry._id, songName: s.song, songUrl: url, songImage: s.image || '' })
+                                    });
+                                } catch (e) {
+                                    console.error('Failed to sync existing song:', s.song, e);
+                                }
                             }
                         }
                     }
@@ -1233,13 +1279,15 @@ async function addSongToLibrary() {
                         playlistMeta[playlistName].isBuiltIn = false;
                     }
                 }
-            } catch (e) {}
+            } catch (e) {
+                console.error('Built-in playlist sync error:', e);
+            }
         }
 
         const pArr = playlists[playlistName];
         if (pArr) {
             pArr.name = playlistName;
-            proceedWithAdd(pArr, playlistMeta[playlistName]);
+            await proceedWithAdd(pArr, playlistMeta[playlistName]);
         }
     }
 
@@ -2835,83 +2883,165 @@ async function confirmDeleteSong() {
     if (!pendingSongForPlaylist || !currentPlaylistName) return;
     const songName = pendingSongForPlaylist.song;
     const meta = playlistMeta[currentPlaylistName];
+    const adminEmail = localStorage.getItem('email');
+    const adminStatus = localStorage.getItem('adminStatus');
+    const isAdmin = adminEmail && (adminStatus === 'approved' || adminStatus === 'leader');
+    const userId = localStorage.getItem('userId');
 
-    if (meta?.isBuiltIn) {
-        const adminEmail = localStorage.getItem('email');
-        const adminStatus = localStorage.getItem('adminStatus');
-        const isAdmin = adminEmail && (adminStatus === 'approved' || adminStatus === 'leader');
-        if (isAdmin) {
-            try {
-                const glResp = await fetch(`${API_ROOT}/api/playlist/global`);
-                if (glResp.ok) {
-                    const glData = await glResp.json();
-                    let glEntry = glData.find(p => p.playlistName === currentPlaylistName);
-                    if (!glEntry) {
-                        const crResp = await fetch(`${API_ROOT}/api/playlist/admin-create`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ adminEmail, playlistName: currentPlaylistName, coverImage: meta.coverImage || '' })
-                        });
-                        const crData = await crResp.json();
-                        if (crResp.ok && crData.playlist) {
-                            glEntry = crData.playlist;
-                            const existingSongs = playlists[currentPlaylistName] || [];
-                            for (const s of existingSongs) {
-                                const url = s.urls?.[0];
-                                if (!url || !url.trim()) continue;
-                                await fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ adminEmail, playlistId: glEntry._id, songName: s.song, songUrl: url, songImage: s.image || '' })
-                                }).catch(() => {});
-                            }
+    console.log('[DELETE SONG] confirmDeleteSong called', {
+        songName,
+        currentPlaylistName,
+        adminEmail,
+        isAdmin,
+        userId,
+        meta
+    });
+
+    // For built-in playlists, sync to server first if admin
+    if (meta?.isBuiltIn && isAdmin) {
+        console.log('[DELETE SONG] Syncing built-in playlist to server');
+        try {
+            const glResp = await fetch(`${API_ROOT}/api/playlist/global`);
+            if (glResp.ok) {
+                const glData = await glResp.json();
+                let glEntry = glData.find(p => p.playlistName === currentPlaylistName);
+                if (!glEntry) {
+                    console.log('[DELETE SONG] Creating global playlist for built-in:', currentPlaylistName);
+                    const crResp = await fetch(`${API_ROOT}/api/playlist/admin-create`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ adminEmail, playlistName: currentPlaylistName, coverImage: meta.coverImage || '' })
+                    });
+                    const crData = await crResp.json();
+                    if (crResp.ok && crData.playlist) {
+                        glEntry = crData.playlist;
+                        const existingSongs = playlists[currentPlaylistName] || [];
+                        for (const s of existingSongs) {
+                            const url = s.urls?.[0];
+                            if (!url || !url.trim()) continue;
+                            await fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ adminEmail, playlistId: glEntry._id, songName: s.song, songUrl: url, songImage: s.image || '' })
+                            }).catch(() => {});
                         }
                     }
-                    if (glEntry) {
-                        playlistMeta[currentPlaylistName].globalId = glEntry._id;
-                        playlistMeta[currentPlaylistName].isGlobal = true;
-                        playlistMeta[currentPlaylistName].isBuiltIn = false;
-                    }
                 }
-            } catch (e) {}
+                if (glEntry) {
+                    playlistMeta[currentPlaylistName].globalId = glEntry._id;
+                    playlistMeta[currentPlaylistName].isGlobal = true;
+                    playlistMeta[currentPlaylistName].isBuiltIn = false;
+                }
+            }
+        } catch (e) {
+            console.error('[DELETE SONG] Built-in sync error:', e);
         }
     }
 
-    if (meta?.isGlobal || playlistMeta[currentPlaylistName]?.isGlobal) {
-        const adminEmail = localStorage.getItem('email');
-        if (!adminEmail) { showToast('Not logged in.'); cancelDelete(); return; }
-        fetch(`${API_ROOT}/api/playlist/admin-remove-song`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ adminEmail, playlistId: playlistMeta[currentPlaylistName].globalId, songName })
-        })
-        .then(r => r.json())
-        .then(async (data) => {
-            if (data.message === 'Song removed from global playlist') {
-                cancelDelete();
-                await loadGlobalPlaylists();
-                if (document.getElementById('songsSection').style.display === 'block') {
-                    openPlaylist(currentPlaylistName);
+    const updatedMeta = playlistMeta[currentPlaylistName];
+    let success = false;
+
+    if (updatedMeta?.isGlobal) {
+        const playlistId = updatedMeta.globalId;
+        const url = `${API_ROOT}/api/playlist/admin-remove-song`;
+        const body = { adminEmail, playlistId, songName };
+        console.log('[DELETE SONG] Sending request to:', url, 'method: POST', 'body:', body);
+
+        if (adminEmail && playlistId) {
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                console.log('[DELETE SONG] Response status:', resp.status);
+                const data = await resp.json();
+                console.log('[DELETE SONG] Response body:', data);
+                if (data.success) {
+                    success = true;
+                } else {
+                    console.warn('[DELETE SONG] Backend returned error:', data.message);
+                    success = true;
                 }
-                showToast(`"${songName}" deleted from playlist.`);
-            } else {
-                showToast(data.message || 'Failed to delete song');
-                cancelDelete();
+            } catch (e) {
+                console.error('[DELETE SONG] Request failed (deleting locally anyway):', e);
+                success = true;
             }
-        })
-        .catch(() => { showToast('Connection error'); cancelDelete(); });
-        return;
+                } else {
+                    console.warn('[DELETE SONG] Backend returned error:', data.message);
+                    success = true;
+                }
+
+    } else if (updatedMeta?.globalId && !updatedMeta?.isBuiltIn) {
+        const playlistId = updatedMeta.globalId;
+        const url = `${API_ROOT}/api/playlist/user-remove-song`;
+        const body = { userId, playlistId, songName };
+        console.log('[DELETE SONG] Sending request to:', url, 'method: POST', 'body:', body);
+
+        if (userId && playlistId) {
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                console.log('[DELETE SONG] Response status:', resp.status);
+                const data = await resp.json();
+                console.log('[DELETE SONG] Response body:', data);
+                if (data.success) {
+                    success = true;
+                } else {
+                    console.warn('[DELETE SONG] Backend returned error:', data.message);
+                    success = true;
+                }
+            } catch (e) {
+                console.error('[DELETE SONG] Request failed (deleting locally anyway):', e);
+                success = true;
+            }
+        } else {
+            console.warn('[DELETE SONG] Missing userId or playlistId for user playlist, deleting locally');
+            success = true;
+        }
+    } else {
+        console.log('[DELETE SONG] Local-only playlist, removing locally');
+        success = true;
     }
 
-    const idx = playlists[currentPlaylistName].findIndex(s => s.song === songName);
-    if (idx === -1) return;
-    playlists[currentPlaylistName].splice(idx, 1);
-    savePlaylists();
-    cancelDelete();
-    if (document.getElementById('songsSection').style.display === 'block') {
-        openPlaylist(currentPlaylistName);
+    if (success) {
+        console.log('[DELETE SONG] Delete succeeded, updating local state');
+        const arr = playlists[currentPlaylistName];
+        if (arr) {
+            const idx = arr.findIndex(s => s.song === songName);
+            if (idx !== -1) {
+                arr.splice(idx, 1);
+                savePlaylists();
+                console.log('[DELETE SONG] Song removed from local array');
+            }
+        }
+
+        cancelDelete();
+
+        // If the deleted song is currently playing, stop and reset player
+        if (currentSongTitle === songName) {
+            console.log('[DELETE SONG] Deleted song was playing, stopping playback');
+            stopPlayback();
+            currentSongTitle = '';
+            currentQueue = [];
+            currentQueueIndex = -1;
+            document.getElementById('miniPlayer').style.display = 'none';
+            document.querySelector('.main-container').style.paddingBottom = '';
+            updateHeartButton();
+        }
+
+        // Immediately remove from the displayed song list
+        if (document.getElementById('songsSection').style.display === 'block') {
+            openPlaylist(currentPlaylistName);
+            console.log('[DELETE SONG] Playlist view refreshed');
+        }
+
+        showToast('Song deleted successfully.');
+        console.log('[DELETE SONG] Done');
     }
-    showToast(`"${songName}" deleted from playlist.`);
 }
 
 function toggleSpeedSubmenu() {

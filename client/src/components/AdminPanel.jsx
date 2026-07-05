@@ -85,14 +85,20 @@ export default function AdminPanel({ onClose }) {
   const handleAddSongFile = async () => {
     if (!selectedPlaylist || !songName.trim()) { showMsg('Select playlist and enter song name'); return; }
     if (!songFile) { showMsg('Select an MP3 file'); return; }
-    const formData = new FormData();
-    formData.append('adminEmail', user.email);
-    formData.append('playlistId', selectedPlaylist);
-    formData.append('songName', songName.trim());
-    formData.append('file', songFile);
-    if (songImage.trim()) formData.append('songImage', songImage.trim());
     try {
-      await playlistAPI.adminAddSong(formData);
+      const uploadFormData = new FormData();
+      uploadFormData.append('song', songFile);
+      const uploadRes = await fetch('/api/upload', { method: 'POST', body: uploadFormData });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok || !uploadData.success) { showMsg('Upload failed'); return; }
+      const cloudinaryUrl = uploadData.songUrl;
+      await playlistAPI.adminAddSongUrl({
+        adminEmail: user.email,
+        playlistId: selectedPlaylist,
+        songName: songName.trim(),
+        songUrl: cloudinaryUrl,
+        songImage: songImage.trim() || undefined
+      });
       showMsg('Song added');
       setSongName(''); setSongUrl(''); setSongFile(null); setSongImage('');
       await loadPlaylists();

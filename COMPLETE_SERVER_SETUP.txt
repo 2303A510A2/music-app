@@ -1,0 +1,210 @@
+=====================================
+COMPLETE BACKEND SETUP GUIDE
+=====================================
+
+The connection error happens because the backend server is not running.
+Follow these steps EXACTLY to fix it:
+
+STEP-BY-STEP INSTRUCTIONS:
+==========================
+
+STEP 1: Check if Node.js is Installed
+-----
+Press Windows Key + R
+Type: cmd
+Press Enter
+
+In the terminal, type:
+  node --version
+
+You should see something like: v16.0.0 or v18.0.0
+
+If you get "node: command not found" or similar:
+- Go to: https://nodejs.org
+- Download the LTS version
+- Install it
+- Restart your computer
+- Try again
+
+
+STEP 2: Navigate to the Project Folder
+-----
+In the terminal, type:
+  cd Desktop\"my music"
+
+(Note the quotes around "my music" because of the space)
+
+You should see the path change to show "my music"
+
+
+STEP 3: Install Dependencies (First Time Only)
+-----
+Type this command and press Enter:
+  npm install
+
+This will download and install all required packages.
+It may take 1-2 minutes - be patient!
+
+You should see something like:
+  added XXX packages in XX seconds
+
+
+STEP 4: Start the Backend Server
+-----
+Type this command and press Enter:
+  npm start
+
+WAIT! Look for this message:
+  "Server running on http://localhost:5000"
+
+If you see this, the server is working! ✓
+
+
+STEP 5: Open Your Browser
+-----
+In your browser (Chrome, Firefox, Edge, etc.), go to:
+  http://localhost:5000
+
+You should see the login/register page
+
+
+STEP 6: Create Your Account
+-----
+1. Click "Sign up" link
+2. Fill in:
+   - Full Name: Your name
+   - Email: Your email address
+   - Password: At least 6 characters
+   - Confirm Password: Same password again
+3. Click "Create Account"
+4. Login with your email and password
+5. Enjoy the music app!
+
+
+VERY IMPORTANT NOTES:
+====================
+
+⚠️  DO NOT CLOSE THE TERMINAL!
+    The terminal window must stay open while you use the app.
+    Closing it will stop the server.
+
+⚠️  DO NOT STOP THE SERVER!
+    Let it keep running. When you're done, press Ctrl+C
+
+⚠️  ONLY DO STEP 3 ONCE!
+    You only need to install packages the first time.
+    After that, just do Steps 1, 2, 4, and 5.
+
+
+IF YOU GET ERRORS:
+==================
+
+Error 1: "npm: command not found"
+→ Node.js not installed
+→ Download from https://nodejs.org
+→ Install and restart computer
+→ Try again
+
+Error 2: "cd: command not found"
+→ You might be using PowerShell
+→ Close it and open Command Prompt (cmd) instead
+→ Try: Windows Key + R, type cmd, press Enter
+
+Error 3: "Port 5000 already in use"
+→ Another app is using port 5000
+→ Close other applications
+→ Or restart your computer
+
+Error 4: Still getting connection error
+→ Make sure server shows: "Server running on http://localhost:5000"
+→ Make sure you're using http:// (not https://)
+→ Try refreshing the page (Ctrl+R or F5)
+
+Error 5: "Cannot find module" or similar
+→ Step 3 (npm install) didn't complete
+→ Try running it again: npm install
+
+Error 6: Files not found
+→ Make sure you're in "Desktop\my music" folder
+→ Type: dir
+→ You should see: backend, frontend, package.json, etc.
+
+
+VERIFY THE SERVER IS RUNNING:
+=============================
+
+After typing "npm start", you should see messages like:
+  > my-music-app@1.0.0 start
+  > node backend/server.js
+  Connected to SQLite database
+  Users table ready
+  Playlists table ready
+  Songs table ready
+  Server running on http://localhost:5000
+
+If you see all these messages, the server is working!
+
+Go to: http://localhost:5000 in your browser
+
+
+QUICK TEST:
+===========
+
+After server is running, go to:
+  http://localhost:5000/test.html
+
+This page will show if the connection is working.
+
+If it says "Backend Server is Running!" - You're good!
+If it says "Not Running" - Try the steps again
+
+
+NEXT TIME:
+==========
+
+You only need to:
+1. Open terminal (Windows Key + R, type cmd, press Enter)
+2. Type: cd Desktop\"my music"
+3. Type: npm start
+4. Wait for "Server running on http://localhost:5000"
+5. Go to http://localhost:5000 in your browser
+
+You don't need to run "npm install" again!
+
+
+STILL HAVING ISSUES?
+====================
+
+Try these steps:
+1. Close the terminal (Press Ctrl+C, then close window)
+2. Close your browser completely
+3. Open terminal again
+4. Go to project folder: cd Desktop\"my music"
+5. Start server again: npm start
+6. Refresh your browser page
+
+If still not working:
+- Check the terminal for error messages
+- Copy the error message and search it on Google
+- Or try the files included in the project:
+  * QUICK_START.txt
+  * SETUP_GUIDE.txt
+  * INSTALL_AND_RUN.bat
+
+
+WINDOWS COMMAND QUICK REFERENCE:
+================================
+
+cd Desktop\"my music"    → Navigate to folder
+npm install              → Install packages (first time only)
+npm start                → Start server
+Ctrl+C                   → Stop server (in terminal)
+dir                      → List files in folder
+node --version           → Check Node.js version
+npm --version            → Check npm version
+
+
+YOU'VE GOT THIS! 🎵
+==================
+
+Just follow the steps above and you'll have your music app running!
