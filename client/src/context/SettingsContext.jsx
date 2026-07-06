@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const SettingsContext = createContext(null);
 
@@ -6,9 +6,19 @@ const defaults = {
   themeMode: 'dark',
   accentColor: '#1db954',
   fontSize: 'medium',
+  compactMode: false,
   bgColor: null,
   bgImage: null
 };
+
+function applyTheme(themeMode) {
+  if (themeMode === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('light-mode', !prefersDark);
+  } else {
+    document.documentElement.classList.toggle('light-mode', themeMode === 'light');
+  }
+}
 
 export function SettingsProvider({ children }) {
   const [settings, setSettings] = useState(() => {
@@ -19,12 +29,21 @@ export function SettingsProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('appSettings', JSON.stringify(settings));
     document.documentElement.style.setProperty('--accent-color', settings.accentColor);
-    document.documentElement.classList.toggle('light-mode', settings.themeMode === 'light');
+    applyTheme(settings.themeMode);
+    document.documentElement.classList.toggle('compact-mode', settings.compactMode);
   }, [settings]);
 
-  const updateSetting = (key, value) => {
+  useEffect(() => {
+    if (settings.themeMode !== 'system') return;
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = () => applyTheme('system');
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, [settings.themeMode]);
+
+  const updateSetting = useCallback((key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
   return (
     <SettingsContext.Provider value={{ settings, updateSetting }}>

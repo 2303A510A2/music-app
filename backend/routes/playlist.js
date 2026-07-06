@@ -35,6 +35,36 @@ router.post('/admin-create', async (req, res) => {
   }
 });
 
+// Admin rename a global playlist
+router.post('/admin-rename', async (req, res) => {
+  try {
+    const { adminEmail, playlistId, newName } = req.body;
+    if (!adminEmail || !playlistId || !newName || !newName.trim()) {
+      return res.status(400).json({ message: 'Admin email, playlist ID, and new name are required' });
+    }
+    const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
+    if (!admin) {
+      return res.status(403).json({ message: 'Only approved admins can rename playlists' });
+    }
+    const existing = await Playlist.findOne({ playlistName: newName.trim(), isGlobal: true, _id: { $ne: playlistId } });
+    if (existing) {
+      return res.status(409).json({ message: 'A global playlist with that name already exists' });
+    }
+    const playlist = await Playlist.findOneAndUpdate(
+      { _id: playlistId, isGlobal: true },
+      { playlistName: newName.trim() },
+      { new: true }
+    );
+    if (!playlist) {
+      return res.status(404).json({ message: 'Global playlist not found' });
+    }
+    res.json({ message: 'Playlist renamed', playlist });
+  } catch (err) {
+    console.error('Error renaming global playlist:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 // Fetch all global playlists
 router.get('/global', async (req, res) => {
   try {
@@ -326,6 +356,32 @@ router.get('/user-playlists/:userId', async (req, res) => {
     res.json(playlists);
   } catch (err) {
     console.error('Error fetching user playlists:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Rename a user playlist
+router.post('/user-rename', async (req, res) => {
+  try {
+    const { userId, playlistId, newName } = req.body;
+    if (!userId || !playlistId || !newName || !newName.trim()) {
+      return res.status(400).json({ message: 'User ID, playlist ID, and new name are required' });
+    }
+    const existing = await Playlist.findOne({ userId, playlistName: newName.trim(), isGlobal: false, _id: { $ne: playlistId } });
+    if (existing) {
+      return res.status(409).json({ message: 'A playlist with that name already exists' });
+    }
+    const playlist = await Playlist.findOneAndUpdate(
+      { _id: playlistId, userId, isGlobal: false },
+      { playlistName: newName.trim() },
+      { new: true }
+    );
+    if (!playlist) {
+      return res.status(404).json({ message: 'Playlist not found' });
+    }
+    res.json({ message: 'Playlist renamed', playlist });
+  } catch (err) {
+    console.error('Error renaming user playlist:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 });

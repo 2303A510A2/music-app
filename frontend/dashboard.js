@@ -568,39 +568,48 @@ function renderPlaylists() {
     const adminStatus = localStorage.getItem('adminStatus');
     const isAdmin = adminEmail && (adminStatus === 'approved' || adminStatus === 'leader');
 
-    const playlistOrder = ["Telugu", "English", "Hindi", "Folk", "BGM's", "Devotion"];
+    const FIXED_FIRST = ["Telugu", "English", "Hindi", "Folk"];
+    const ALWAYS_LAST = ["Devotion", "BGM's"];
     const allKeys = Object.keys(playlists);
     allKeys.sort((a, b) => {
-        const aIdx = playlistOrder.indexOf(a);
-        const bIdx = playlistOrder.indexOf(b);
-        if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
-        if (aIdx !== -1) return -1;
-        if (bIdx !== -1) return 1;
+        const aFirst = FIXED_FIRST.indexOf(a);
+        const bFirst = FIXED_FIRST.indexOf(b);
+        const aLast = ALWAYS_LAST.indexOf(a);
+        const bLast = ALWAYS_LAST.indexOf(b);
+
+        if (aFirst !== -1 && bFirst !== -1) return aFirst - bFirst;
+        if (aFirst !== -1) return -1;
+        if (bFirst !== -1) return 1;
+        if (aLast !== -1 && bLast !== -1) return aLast - bLast;
+        if (aLast !== -1) return 1;
+        if (bLast !== -1) return -1;
         return 0;
     });
     allKeys.forEach(name => {
-        if (playlistMeta[name]?.isGlobal) {
-            const img = playlistMeta[name]?.coverImage || '';
-            const safeName = name.replace(/'/g, "\\'");
+        const isGlobal = playlistMeta[name]?.isGlobal;
+        const canShowDots = isAdmin || !isGlobal;
+        const img = playlistMeta[name]?.coverImage || '';
+        const safeName = name.replace(/'/g, "\\'");
+        const dotsHtml = canShowDots ? `<button class="playlist-dots" onclick="event.stopPropagation(); showPlaylistCardMenu('${safeName}', this)" title="More">⋮</button>` : '';
+
+        if (isGlobal) {
             mainHtml += `<div class="playlist playlist-custom" onclick="openPlaylist('${safeName}')">
                 ${img ? `<img src="${img}" alt="${name}">` : `<div class="custom-playlist-img">🎵</div>`}
                 <div class="playlist-title">${name}</div>
-                ${isAdmin ? `<button class="playlist-dots" onclick="event.stopPropagation(); showPlaylistCardMenu('${safeName}', this)" title="More">⋮</button>` : ''}
+                ${dotsHtml}
             </div>`;
             hasMain = true;
         } else {
-            const img = playlistMeta[name]?.coverImage || '';
-            const safeName = name.replace(/'/g, "\\'");
             userHtml += `<div class="playlist playlist-custom" onclick="openPlaylist('${safeName}')">
                 ${img ? `<img src="${img}" alt="${name}">` : `<div class="custom-playlist-img">🎵</div>`}
                 <div class="playlist-title">${name}</div>
-                <button class="playlist-dots" onclick="event.stopPropagation(); showPlaylistCardMenu('${safeName}', this)" title="More">⋮</button>
+                ${dotsHtml}
             </div>`;
             hasUser = true;
         }
     });
 
-    ['Telugu', 'English', 'Hindi', 'Folk', "BGM's", 'Devotion'].forEach(name => {
+    FIXED_FIRST.concat(ALWAYS_LAST).forEach(name => {
         if (!playlists[name]) {
             const safeName = name.replace(/'/g, "\\'");
             mainHtml += `<div class="playlist playlist-custom" onclick="openPlaylist('${safeName}')">
@@ -1303,10 +1312,58 @@ function confirmRename(oldName) {
         showToast('A playlist with that name already exists.');
         return;
     }
+    const adminEmail = localStorage.getItem('email');
+    const adminStatus = localStorage.getItem('adminStatus');
+    const isAdmin = adminEmail && (adminStatus === 'approved' || adminStatus === 'leader');
+
     if (playlistMeta[oldName]?.isGlobal) {
-        showToast('Cannot rename a shared playlist.');
+        if (!isAdmin) {
+            showToast('Cannot rename a shared playlist.');
+            return;
+        }
+        const playlistId = playlistMeta[oldName].globalId;
+        if (playlistId) {
+            fetch(`${API_ROOT}/api/playlist/admin-rename`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminEmail, playlistId, newName })
+            }).then(resp => {
+                if (!resp.ok) {
+                    resp.json().then(data => showToast(data.message || 'Failed to rename on server')).catch(() => showToast('Failed to rename on server'));
+                    return;
+                }
+                doLocalRename(oldName, newName);
+            }).catch(() => {
+                doLocalRename(oldName, newName);
+            });
+        } else {
+            doLocalRename(oldName, newName);
+        }
         return;
     }
+    // User playlist - persist rename to server
+    const playlistId = playlistMeta[oldName]?.globalId;
+    const userId = localStorage.getItem('userId');
+    if (playlistId && userId) {
+        fetch(`${API_ROOT}/api/playlist/user-rename`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, playlistId, newName })
+        }).then(resp => {
+            if (!resp.ok) {
+                resp.json().then(data => showToast(data.message || 'Failed to rename on server')).catch(() => showToast('Failed to rename on server'));
+                return;
+            }
+            doLocalRename(oldName, newName);
+        }).catch(() => {
+            doLocalRename(oldName, newName);
+        });
+    } else {
+        doLocalRename(oldName, newName);
+    }
+}
+
+function doLocalRename(oldName, newName) {
     playlists[newName] = playlists[oldName];
     delete playlists[oldName];
     playlistMeta[newName] = playlistMeta[oldName];
@@ -1379,16 +1436,52 @@ function deleteCurrentPlaylist() {
 function showPlaylistCardMenu(name, btn) {
     pendingPlaylistCard = name;
     const menu = document.getElementById('playlistCardDropdown');
-    // Show delete only for non-global playlists, or if user is admin
     const adminStatus = localStorage.getItem('adminStatus');
     const isAdmin = adminStatus === 'approved' || adminStatus === 'leader';
     const isGlobal = playlistMeta[name]?.isGlobal;
-    const deleteItem = menu.querySelector('.menu-item');
-    deleteItem.style.display = (!isGlobal || isAdmin) ? '' : 'none';
+
+    const renameItem = document.getElementById('pcardRename');
+    const addItem = document.getElementById('pcardAddSongs');
+    const removeItem = document.getElementById('pcardRemoveSongs');
+    const deleteItem = document.getElementById('pcardDelete');
+
+    if (isAdmin) {
+        renameItem.style.display = '';
+        addItem.style.display = '';
+        removeItem.style.display = '';
+        deleteItem.style.display = '';
+    } else {
+        // User: can only rename/delete their own (non-global) playlists
+        renameItem.style.display = isGlobal ? 'none' : '';
+        addItem.style.display = 'none';
+        removeItem.style.display = 'none';
+        deleteItem.style.display = isGlobal ? 'none' : '';
+    }
+
     const rect = btn.getBoundingClientRect();
     menu.style.left = rect.left + 'px';
     menu.style.top = (rect.bottom + 4) + 'px';
     menu.style.display = 'block';
+}
+
+function playlistCardRename() {
+    const name = pendingPlaylistCard;
+    closePlaylistCardMenu();
+    if (name) {
+        showRenameInput(name);
+    }
+}
+
+function playlistCardAddSongs() {
+    closePlaylistCardMenu();
+    showSongSettingsView();
+    showAddSongForm();
+}
+
+function playlistCardRemoveSongs() {
+    closePlaylistCardMenu();
+    showSongSettingsView();
+    showRemoveSongForm();
 }
 
 function closePlaylistCardMenu() {

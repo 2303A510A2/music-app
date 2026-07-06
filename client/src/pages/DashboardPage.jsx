@@ -8,7 +8,8 @@ import ContactModal from '../components/ContactModal';
 import AdminPanel from '../components/AdminPanel';
 import SettingsModal from '../components/SettingsModal';
 
-const DEFAULT_PLAYLIST_NAMES = ['Telugu', 'English', 'Hindi', 'Folk', 'Devotion', "BGM's"];
+const FIXED_FIRST = ['Telugu', 'English', 'Hindi', 'Folk'];
+const ALWAYS_LAST = ['Devotion', "BGM's"];
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -91,20 +92,45 @@ export default function DashboardPage() {
     userPlaylists.forEach(p => {
       if (!map[p.playlistName]) map[p.playlistName] = p;
     });
-    const defaults = DEFAULT_PLAYLIST_NAMES.map(name => ({
-      ...map[name],
-      playlistName: name,
-      songs: map[name]?.songs || [],
-      coverImage: map[name]?.coverImage || ''
-    }));
-    const seen = new Set(DEFAULT_PLAYLIST_NAMES);
-    [...globalPlaylists, ...userPlaylists].forEach(p => {
-      if (!seen.has(p.playlistName)) {
-        defaults.push(p);
+    const result = [];
+    const seen = new Set();
+
+    FIXED_FIRST.forEach(name => {
+      result.push({
+        ...map[name],
+        playlistName: name,
+        songs: map[name]?.songs || [],
+        coverImage: map[name]?.coverImage || '',
+        isGlobal: true
+      });
+      seen.add(name);
+    });
+
+    globalPlaylists.forEach(p => {
+      if (!seen.has(p.playlistName) && !ALWAYS_LAST.includes(p.playlistName)) {
+        result.push(p);
         seen.add(p.playlistName);
       }
     });
-    return defaults;
+
+    ALWAYS_LAST.forEach(name => {
+      result.push({
+        ...map[name],
+        playlistName: name,
+        songs: map[name]?.songs || [],
+        coverImage: map[name]?.coverImage || '',
+        isGlobal: true
+      });
+      seen.add(name);
+    });
+
+    userPlaylists.forEach(p => {
+      if (!seen.has(p.playlistName)) {
+        result.push(p);
+        seen.add(p.playlistName);
+      }
+    });
+    return result;
   };
 
   const handleCreatePlaylist = async () => {

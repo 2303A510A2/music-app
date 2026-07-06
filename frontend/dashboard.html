@@ -244,7 +244,11 @@
 
     <!-- Playlist Card Dropdown -->
     <div id="playlistCardDropdown" class="song-menu-dropdown" style="display:none;">
-        <div class="menu-item" onclick="playlistCardDelete()" style="color:#ff4444;">🗑️ Delete Playlist</div>
+        <div class="menu-item" id="pcardRename" onclick="playlistCardRename()">✏️ Rename</div>
+        <div class="menu-item" id="pcardAddSongs" onclick="playlistCardAddSongs()" style="display:none;">➕ Add Songs</div>
+        <div class="menu-item" id="pcardRemoveSongs" onclick="playlistCardRemoveSongs()" style="display:none;">🗑️ Remove Songs</div>
+        <div style="border-top:1px solid #404040;margin:4px 0;"></div>
+        <div class="menu-item" id="pcardDelete" onclick="playlistCardDelete()" style="color:#ff4444;">🗑️ Delete Playlist</div>
     </div>
 
     <!-- Playlist Action Modal (Delete Confirmation / Create Playlist) -->

@@ -7,6 +7,9 @@ const userSchema = new mongoose.Schema({
   petName: { type: String },
   favoriteColor: { type: String },
   isAdmin: { type: Boolean, default: false },
+  isLeader: { type: Boolean, default: false },
+  approved: { type: Boolean, default: false },
+  status: { type: String, default: 'active' },
   adminStatus: { type: String, enum: ['none', 'pending', 'approved', 'leader'], default: 'none' }
 }, { timestamps: { createdAt: 'createdAt', updatedAt: false } });
 

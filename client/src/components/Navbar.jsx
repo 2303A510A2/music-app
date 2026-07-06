@@ -24,7 +24,7 @@ export default function Navbar({ userName, onLogout, onOpenAdmin, onOpenSettings
       </div>
       <div className="nav-actions">
         <button className="nav-btn" title="Favorites">❤</button>
-        <button className="nav-btn" title="Settings" onClick={onOpenSettings}>⚙</button>
+        <button className="nav-btn" title="Settings" onClick={() => navigate('/settings')}>⚙</button>
         {isAdmin && <button className="nav-btn admin-btn" title="Admin Panel" onClick={onOpenAdmin}>🛠</button>}
         <button className="nav-btn" title="Logout" onClick={onLogout}>🚪</button>
       </div>

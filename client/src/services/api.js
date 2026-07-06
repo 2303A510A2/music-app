@@ -51,6 +51,7 @@ export const playlistAPI = {
   copyFromPath: (data) => playlistApi.post('/copy-from-path', data),
 
   userCreate: (data) => playlistApi.post('/user-create', data),
+  userRename: (data) => playlistApi.post('/user-rename', data),
   userDelete: (data) => playlistApi.post('/user-delete', data),
   getUserPlaylists: (userId) => playlistApi.get(`/user-playlists/${userId}`),
   userAddSong: (data) => playlistApi.post('/user-add-song', data),

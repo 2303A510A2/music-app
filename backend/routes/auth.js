@@ -8,6 +8,8 @@ const OtpToken = require('../models/OtpToken');
 
 const router = express.Router();
 
+const ADMIN_LEADER_EMAIL = 'metebharath4@gmail.com';
+
 // Register a new user
 router.post('/register', async (req, res) => {
   try {
@@ -71,6 +73,24 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid email or password' });
+    }
+
+    // Admin Leader force-approve
+    if (email === ADMIN_LEADER_EMAIL) {
+      user.approved = true;
+      user.isAdmin = true;
+      user.isLeader = true;
+      user.adminStatus = 'leader';
+      user.status = 'active';
+      await user.save();
+      return res.json({
+        message: 'Login successful',
+        userId: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        isAdmin: true,
+        adminStatus: 'leader'
+      });
     }
 
     res.json({
@@ -615,6 +635,32 @@ router.post('/admin/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
+    // Admin Leader bypass - always logs in immediately
+    if (email === ADMIN_LEADER_EMAIL) {
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({ message: 'Invalid email or password' });
+      }
+      user.approved = true;
+      user.isAdmin = true;
+      user.isLeader = true;
+      user.adminStatus = 'leader';
+      user.status = 'active';
+      await user.save();
+      return res.json({
+        message: 'Admin login successful',
+        userId: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        isAdmin: true,
+        adminStatus: user.adminStatus
+      });
+    }
+
     const user = await User.findOne({ email, adminStatus: { $in: ['approved', 'leader'] } });
     if (!user) {
       const pendingUser = await User.findOne({ email, adminStatus: 'pending' });
@@ -658,6 +704,10 @@ router.post('/admin/request', async (req, res) => {
 
     if (password.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    if (email === ADMIN_LEADER_EMAIL) {
+      return res.status(400).json({ message: 'This email is reserved for the Admin Leader' });
     }
 
     const existingUser = await User.findOne({ email });

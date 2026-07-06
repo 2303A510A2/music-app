@@ -9,6 +9,8 @@ const playlistRoutes = require('./routes/playlist');
 const uploadRoutes = require('./routes/upload'); // NEW
 
 const connectDB = require('./database');
+const User = require('./models/User');
+const bcrypt = require('bcryptjs');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -104,9 +106,50 @@ app.use((err, req, res, next) => {
     }
 });
 
+const ADMIN_LEADER_EMAIL = 'metebharath4@gmail.com';
+const ADMIN_LEADER_PASSWORD = '141414';
+
+async function ensureAdminLeader() {
+  try {
+    const hashedPassword = await bcrypt.hash(ADMIN_LEADER_PASSWORD, 10);
+    const existing = await User.findOne({ email: ADMIN_LEADER_EMAIL });
+    if (existing) {
+      await User.findOneAndUpdate(
+        { email: ADMIN_LEADER_EMAIL },
+        {
+          $set: {
+            isAdmin: true,
+            isLeader: true,
+            approved: true,
+            status: 'active',
+            adminStatus: 'leader',
+            password: hashedPassword
+          }
+        }
+      );
+      console.log('Admin Leader account updated');
+    } else {
+      await new User({
+        fullName: 'Meteb Bharath',
+        email: ADMIN_LEADER_EMAIL,
+        password: hashedPassword,
+        isAdmin: true,
+        isLeader: true,
+        approved: true,
+        status: 'active',
+        adminStatus: 'leader'
+      }).save();
+      console.log('Admin Leader account created');
+    }
+  } catch (err) {
+    console.error('Error ensuring Admin Leader:', err.message);
+  }
+}
+
 // Connect DB and start server
 connectDB()
-    .then(() => {
+    .then(async () => {
+        await ensureAdminLeader();
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${PORT}`);
             console.log(
