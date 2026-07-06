@@ -178,7 +178,7 @@ export default function DashboardPage() {
             </div>
             <div className="song-list">
               {songs.length === 0 ? (
-                <div className="no-results">No songs available.</div>
+                <div className="no-results">No songs yet. Admin can add songs.</div>
               ) : (
                 songs.map((song, idx) => (
                   <div key={idx} className="song-wrapper">

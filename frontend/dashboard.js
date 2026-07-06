@@ -2085,7 +2085,7 @@ function openPlaylist(playlistName) {
     const songList = document.getElementById('songList');
     songList.innerHTML = '';
     if (currentQueue.length === 0) {
-        songList.innerHTML = '<div style="color:#b3b3b3;text-align:center;padding:40px 20px;font-size:1.1em;">No songs available.</div>';
+        songList.innerHTML = '<div style="color:#b3b3b3;text-align:center;padding:40px 20px;font-size:1.1em;">No songs yet. Admin can add songs.</div>';
     } else {
     currentQueue.forEach((songObj, index) => {
         const wrapper = document.createElement('div');

@@ -406,4 +406,46 @@ router.post('/user-remove-song', async (req, res) => {
   }
 });
 
+// Admin cleanup — remove all non-Cloudinary songs from all playlists
+router.post('/admin-clean-songs', async (req, res) => {
+  try {
+    const { adminEmail } = req.body;
+    if (!adminEmail) {
+      return res.status(400).json({ success: false, message: 'Admin email is required' });
+    }
+    const admin = await User.findOne({ email: adminEmail, adminStatus: { $in: ['approved', 'leader'] } });
+    if (!admin) {
+      return res.status(403).json({ success: false, message: 'Only approved admins can clean songs' });
+    }
+
+    const playlists = await Playlist.find({});
+    let totalRemoved = 0;
+    const results = [];
+
+    for (const playlist of playlists) {
+      const before = playlist.songs.length;
+      playlist.songs = playlist.songs.filter(s => {
+        return s.songUrl && s.songUrl.includes('res.cloudinary.com');
+      });
+      const after = playlist.songs.length;
+      const removed = before - after;
+      if (removed > 0) {
+        totalRemoved += removed;
+        await playlist.save();
+        results.push({ playlistName: playlist.playlistName, removed, remaining: after });
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Cleaned ${totalRemoved} old song(s) from ${results.length} playlist(s)`,
+      totalRemoved,
+      details: results
+    });
+  } catch (err) {
+    console.error('[CLEAN SONGS] Error:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 module.exports = router;
