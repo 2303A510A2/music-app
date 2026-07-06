@@ -6,6 +6,9 @@ import Navbar from '../components/Navbar';
 import NowPlaying from '../components/Player/NowPlaying';
 import ContactModal from '../components/ContactModal';
 import AdminPanel from '../components/AdminPanel';
+import SettingsModal from '../components/SettingsModal';
+
+const DEFAULT_PLAYLIST_NAMES = ['Telugu', 'English', 'Hindi', 'Folk', 'Devotion', "BGM's"];
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -13,63 +16,181 @@ export default function DashboardPage() {
   const [userName, setUserName] = useState('');
   const [showContact, setShowContact] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [playlists, setPlaylists] = useState([]);
+  const [showSettings, setShowSettings] = useState(false);
+  const [globalPlaylists, setGlobalPlaylists] = useState([]);
+  const [userPlaylists, setUserPlaylists] = useState([]);
+  const [selectedPlaylist, setSelectedPlaylist] = useState(null);
+  const [songs, setSongs] = useState([]);
+  const [recentSongs, setRecentSongs] = useState([]);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newPlaylistName, setNewPlaylistName] = useState('');
+
+  const isAdmin = user?.isAdmin || user?.adminStatus === 'approved' || user?.adminStatus === 'leader';
 
   useEffect(() => {
-    if (!user) {
-      navigate('/');
-      return;
-    }
+    if (!user) { navigate('/'); return; }
     authAPI.getUser(user.userId)
       .then(res => setUserName(res.data.fullName))
       .catch(() => {});
-    playlistAPI.getGlobalPlaylists()
-      .then(res => setPlaylists(res.data))
-      .catch(() => {});
+    loadPlaylists();
+    loadRecentSongs();
   }, [user, navigate]);
 
+  const loadPlaylists = async () => {
+    try {
+      const res = await playlistAPI.getGlobalPlaylists();
+      setGlobalPlaylists(res.data || []);
+    } catch { setGlobalPlaylists([]); }
+    if (user) {
+      try {
+        const res = await playlistAPI.getUserPlaylists(user.userId);
+        setUserPlaylists(res.data || []);
+      } catch { setUserPlaylists([]); }
+    }
+  };
+
+  const loadRecentSongs = () => {
+    try {
+      const key = user ? `recentSongsHistory_${user.userId}` : 'recentSongsHistory';
+      const saved = localStorage.getItem(key);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setRecentSongs(Array.isArray(parsed) ? parsed : []);
+      }
+    } catch { setRecentSongs([]); }
+  };
+
   const handleLogout = () => {
+    localStorage.removeItem('authUser');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('email');
+    localStorage.removeItem('fullName');
+    localStorage.removeItem('adminStatus');
+    localStorage.removeItem('token');
+    localStorage.removeItem('recentSongsHistory');
+    sessionStorage.clear();
     logout();
     navigate('/');
   };
 
+  const openPlaylist = (playlistName) => {
+    const merged = buildDisplayList();
+    const pl = merged.find(p => p.playlistName === playlistName);
+    setSelectedPlaylist(playlistName);
+    setSongs(pl ? (pl.songs || []) : []);
+  };
+
+  const goHome = () => {
+    setSelectedPlaylist(null);
+    setSongs([]);
+  };
+
+  const buildDisplayList = () => {
+    const map = {};
+    globalPlaylists.forEach(p => { map[p.playlistName] = p; });
+    userPlaylists.forEach(p => {
+      if (!map[p.playlistName]) map[p.playlistName] = p;
+    });
+    const defaults = DEFAULT_PLAYLIST_NAMES.map(name => ({
+      ...map[name],
+      playlistName: name,
+      songs: map[name]?.songs || [],
+      coverImage: map[name]?.coverImage || ''
+    }));
+    const seen = new Set(DEFAULT_PLAYLIST_NAMES);
+    [...globalPlaylists, ...userPlaylists].forEach(p => {
+      if (!seen.has(p.playlistName)) {
+        defaults.push(p);
+        seen.add(p.playlistName);
+      }
+    });
+    return defaults;
+  };
+
+  const handleCreatePlaylist = async () => {
+    if (!newPlaylistName.trim()) return;
+    try {
+      if (isAdmin) {
+        await playlistAPI.adminCreate({ adminEmail: user.email, playlistName: newPlaylistName.trim() });
+      } else {
+        await playlistAPI.userCreate({ userId: user.userId, playlistName: newPlaylistName.trim() });
+      }
+      setNewPlaylistName('');
+      setShowCreateDialog(false);
+      await loadPlaylists();
+    } catch (err) {
+      console.error('Failed to create playlist');
+    }
+  };
+
   if (!user) return null;
+
+  const displayPlaylists = buildDisplayList();
 
   return (
     <div className="dashboard">
-      <Navbar onLogout={handleLogout} userName={userName} onOpenAdmin={() => setShowAdmin(true)} />
+      <Navbar onLogout={handleLogout} userName={userName} onOpenAdmin={() => setShowAdmin(true)} onOpenSettings={() => setShowSettings(true)} />
       <div className="main-container">
-        <div className="welcome-section">
-          <h2>Welcome, {userName || user.fullName}</h2>
-        </div>
-        <div className="playlist-section">
-          <h2>Playlists</h2>
-          <div className="playlist-grid">
-            {playlists.map(p => (
-              <div key={p._id} className="playlist-card">
-                {p.coverImage && (
-                  <img
-                    src={p.coverImage}
-                    alt={p.playlistName}
-                    className="playlist-cover"
-                    onError={e => { e.target.style.display = 'none'; }}
-                  />
-                )}
-                <div className="playlist-info">
-                  <h3>{p.playlistName}</h3>
-                  <p className="playlist-songs-count">{p.songs?.length || 0} songs</p>
-                  {p.createdByAdmin && <span className="admin-badge">Admin</span>}
+        {!selectedPlaylist ? (
+          <>
+            <div className="welcome-section">
+              <h2>Welcome, {userName || user.fullName}</h2>
+            </div>
+
+            {recentSongs.length > 0 && (
+              <div className="recent-section">
+                <h2>Recents</h2>
+                <div className="recent-songs-queue">
+                  {recentSongs.map((song, idx) => (
+                    <div key={idx} className="recent-song-box" title={song}>{song}</div>
+                  ))}
                 </div>
               </div>
-            ))}
-            <div className="playlist-card create-card" onClick={() => {}}>
-              <span className="create-icon">+</span>
-              <p>Create Playlist</p>
+            )}
+
+            <div className="playlist-section">
+              <h2>Songs</h2>
+              <div className="playlist-container">
+                {displayPlaylists.map(p => (
+                  <div key={p.playlistName} className="playlist" onClick={() => openPlaylist(p.playlistName)}>
+                    {p.coverImage ? (
+                      <img src={p.coverImage} alt={p.playlistName} />
+                    ) : (
+                      <div className="custom-playlist-img">🎵</div>
+                    )}
+                    <div className="playlist-title">{p.playlistName}</div>
+                  </div>
+                ))}
+                <div className="create-playlist" onClick={() => setShowCreateDialog(true)}>
+                  <div className="create-playlist-content">
+                    <span className="create-playlist-icon">+</span>
+                    <span className="create-playlist-text">Create Playlist</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div id="songsSection">
+            <div className="songs-header">
+              <button className="btn-back" onClick={goHome}>← Back to Playlists</button>
+              <h2>{selectedPlaylist}</h2>
+            </div>
+            <div className="song-list">
+              {songs.length === 0 ? (
+                <div className="no-results">No songs available.</div>
+              ) : (
+                songs.map((song, idx) => (
+                  <div key={idx} className="song-wrapper">
+                    <div className="song">{song.songName}</div>
+                    <button className="song-dots">⋮</button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
-        </div>
+        )}
 
-        {/* 👨‍💻 Developer Information */}
         <div className="developer-section">
           <div className="developer-card">
             <div className="dev-icon">👨‍💻</div>
@@ -113,6 +234,37 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {showCreateDialog && (
+        <div className="modal-overlay" onClick={() => setShowCreateDialog(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Create Playlist</h3>
+              <button className="modal-close-btn" onClick={() => setShowCreateDialog(false)}>×</button>
+            </div>
+            <div style={{ padding: '4px 0' }}>
+              <div className="form-group" style={{ textAlign: 'left', marginBottom: 12 }}>
+                <label style={{ color: '#fff', display: 'block', marginBottom: 4, fontSize: '0.85em' }}>Playlist Name</label>
+                <input
+                  type="text"
+                  value={newPlaylistName}
+                  onChange={e => setNewPlaylistName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleCreatePlaylist()}
+                  placeholder="Enter playlist name"
+                  style={{ padding: 10, borderRadius: 6, border: '1px solid #404040', background: '#333', color: '#fff', boxSizing: 'border-box', width: '100%', fontSize: '1em' }}
+                  autoFocus
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <button className="timer-btn" onClick={() => setShowCreateDialog(false)} style={{ flex: 1, padding: 10 }}>Cancel</button>
+                <button className="timer-btn timer-custom-go" onClick={handleCreatePlaylist} style={{ flex: 1, padding: 10 }}>Create</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
       {showAdmin && <AdminPanel onClose={() => setShowAdmin(false)} />}
       {showContact && <ContactModal onClose={() => setShowContact(false)} />}
       <NowPlaying />

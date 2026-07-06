@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-export default function Navbar({ userName, onLogout, onOpenAdmin }) {
+export default function Navbar({ userName, onLogout, onOpenAdmin, onOpenSettings }) {
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -24,7 +24,7 @@ export default function Navbar({ userName, onLogout, onOpenAdmin }) {
       </div>
       <div className="nav-actions">
         <button className="nav-btn" title="Favorites">❤</button>
-        <button className="nav-btn" title="Settings">⚙</button>
+        <button className="nav-btn" title="Settings" onClick={onOpenSettings}>⚙</button>
         {isAdmin && <button className="nav-btn admin-btn" title="Admin Panel" onClick={onOpenAdmin}>🛠</button>}
         <button className="nav-btn" title="Logout" onClick={onLogout}>🚪</button>
       </div>

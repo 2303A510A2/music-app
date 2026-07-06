@@ -379,7 +379,7 @@
             <div id="songSettingsCards">
                 <div class="settings-item" onclick="showAddSongForm()" style="flex-direction: column; text-align: center; gap: 2px; padding: 12px;">
                     <div><span class="settings-item-icon">➕</span> <span class="settings-item-label">Add Song</span></div>
-                    <span style="color: #b3b3b3; font-size: 0.82em;">Upload an MP3 file, paste a web link, or a local file path.</span>
+                    <span style="color: #b3b3b3; font-size: 0.82em;">Upload an MP3 file or paste a web link.</span>
                 </div>
                 <div class="settings-item" onclick="showRemoveSongForm()" style="flex-direction: column; text-align: center; gap: 2px; padding: 12px;">
                     <div><span class="settings-item-icon">🗑️</span> <span class="settings-item-label">Remove Song</span></div>
@@ -417,7 +417,7 @@
                             <input type="file" id="newSongFile" accept=".mp3" style="color:#fff;width:100%;">
                         </div>
                         <div id="songUrlGroup" style="display:none;">
-                            <input type="text" id="newSongUrl" placeholder="Paste a web URL or local file path (e.g. C:\Users\...\song.mp3)" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
+                            <input type="text" id="newSongUrl" placeholder="Paste a web URL (e.g. https://...)" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
                         </div>
                     </div>
                     <div class="form-group" style="margin-top:8px;text-align:left;">
@@ -427,7 +427,7 @@
                             <button onclick="setImageSource('file')" id="imgSrcFileBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;cursor:pointer;">File</button>
                         </div>
                         <div id="songImageUrlGroup">
-                            <input type="text" id="newSongImageUrl" placeholder="Paste image URL or local file path (e.g. C:\Users\...\cover.jpg)" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
+                            <input type="text" id="newSongImageUrl" placeholder="Paste image URL (e.g. https://...)" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
                         </div>
                         <div id="songImageFileGroup" style="display:none;">
                             <input type="file" id="newSongImageFile" accept="image/*" style="color:#fff;width:100%;">
@@ -473,16 +473,12 @@
                         <div style="display:flex;gap:8px;margin-bottom:8px;">
                             <button onclick="setCoverSource('url')" id="coverSrcUrlBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:var(--accent-color);color:#000;cursor:pointer;font-weight:600;">URL</button>
                             <button onclick="setCoverSource('file')" id="coverSrcFileBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;cursor:pointer;">Upload</button>
-                            <button onclick="setCoverSource('path')" id="coverSrcPathBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;cursor:pointer;">File Path</button>
                         </div>
                         <div id="coverUrlGroup">
                             <input type="text" id="coverImageUrl" placeholder="Paste image URL (e.g. https://example.com/image.jpg)" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
                         </div>
                         <div id="coverFileGroup" style="display:none;">
                             <input type="file" id="coverImageFile" accept=".jpg,.jpeg,.png,.gif,.svg,.webp" style="color:#fff;width:100%;">
-                        </div>
-                        <div id="coverPathGroup" style="display:none;">
-                            <input type="text" id="coverImagePath" placeholder="Local file path (e.g. C:\images\cover.jpg)" style="padding:8px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
                         </div>
                     </div>
                     <div style="display:flex;gap:8px;margin-top:10px;">

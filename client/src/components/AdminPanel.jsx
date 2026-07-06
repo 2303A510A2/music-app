@@ -173,7 +173,7 @@ export default function AdminPanel({ onClose }) {
           {useFile ? (
             <input type="file" accept=".mp3" onChange={e => setSongFile(e.target.files[0])} />
           ) : (
-            <input value={songUrl} onChange={e => setSongUrl(e.target.value)} placeholder="Song URL (http:// or music/...)" />
+            <input value={songUrl} onChange={e => setSongUrl(e.target.value)} placeholder="Song URL (https://...)" />
           )}
           <input value={songImage} onChange={e => setSongImage(e.target.value)} placeholder="Song image URL (optional)" />
           <div className="admin-form-actions">

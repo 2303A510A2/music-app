@@ -106,77 +106,6 @@ function loadRecentSongsHistory() {
 // Playlists (stored in localStorage)
 let playlists = {};
 
-// Default built-in playlists with songs
-const defaultPlaylists = {
-    'Telugu': [
-        { song: 'Dheemtana', urls: ['music/Dheemtana.mp3'], image: '' },
-        { song: 'Yaalo Yaalaa', urls: ['music/Yaalo Yaalaa.mp3'], image: '' },
-        { song: 'Nuvu Simhame', urls: ['music/Nuvu Simhame.mp3'], image: '' },
-        { song: 'Panchadhara Bomma', urls: ['music/Panchadhara Bomma.mp3'], image: '' },
-        { song: 'Jorsey', urls: ['music/Jorsey.mp3'], image: '' },
-        { song: 'Dheera Dheera Dheera', urls: ['music/Dheera Dheera Dheera.mp3'], image: '' },
-        { song: 'Kumkumala', urls: ['music/Kumkumala.mp3'], image: '' },
-        { song: 'Deva Deva', urls: ['music/Deva Deva.mp3'], image: '' },
-        { song: 'Kanave Unnai', urls: ['music/Kanave Unnai.mp3'], image: '' },
-        { song: 'Ninne Tholi Prema Lo', urls: ['music/Ninne Tholi Prema Lo.mp3'], image: '' },
-        { song: 'Sooseki', urls: ['music/sooseki.mp3'], image: '' },
-        { song: 'Veyira Cheyyi', urls: ['music/Veyira Cheyyi.mp3'], image: '' },
-        { song: 'Ayudha Pooja', urls: ['music/Ayudha Pooja.mp3'], image: '' },
-        { song: 'Sri Anjaneyam', urls: ['music/Sri Anjaneyam.mp3'], image: '' },
-        { song: 'Fear', urls: ['music/Fear.mp3'], image: '' }
-    ],
-    'English': [
-        { song: 'Night Changes', urls: ['music/Night Changes.mp3'], image: '' },
-        { song: 'Faded', urls: ['music/Faded.mp3'], image: '' },
-        { song: 'Cheap Thrills', urls: ['music/Cheap Thrills.mp3'], image: '' },
-        { song: 'See You Again', urls: ['music/See You Again.mp3'], image: '' },
-        { song: 'Infinity', urls: ['music/Infinity - Jaymes Young.mp3'], image: '' },
-        { song: 'Perfect', urls: ['music/Perfect.mp3'], image: '' },
-        { song: 'I Wanna Be Yours', urls: ['music/I Wanna Be Yours.mp3'], image: '' },
-        { song: 'On My Way', urls: ['music/On My Way.mp3'], image: '' },
-        { song: 'My Baby', urls: ['music/My Baby.mp3'], image: '' },
-        { song: 'Cheri Cheri Lady', urls: ['music/Cheri Cheri Lady.mp3'], image: '' },
-        { song: 'Young and Beautiful', urls: ['music/Young and Beautiful.mp3'], image: '' },
-        { song: 'Moral of the Story', urls: ['music/Moral of the Story.mp3'], image: '' }
-    ],
-    'Hindi': [
-        { song: 'Luka Chuppi', urls: ['music/Luka Chuppi.mp3'], image: '' },
-        { song: 'Luk Chup Na Jao', urls: ['music/Luk Chup Na Jao.mp3'], image: '' },
-        { song: 'Chaiyya Chaiyya', urls: ['music/Chaiyya Chaiyya.mp3'], image: '' },
-        { song: 'Heeriye', urls: ['music/Heeriye.mp3'], image: '' },
-        { song: 'Chammak Challo', urls: ['music/Chammak Challo.mp3'], image: '' },
-        { song: 'Tere Vaaste', urls: ['music/Tere Vaaste.mp3'], image: '' }
-    ],
-    'Folk': [
-        { song: 'Rambai Neemeedha Naku', urls: ['music/Rambai-Neemeedha-Naku.mp3'], image: '' },
-        { song: 'Telangana Dappulu', urls: ['music/Telangana Dappulu - Telugu Dj Songs.mp3'], image: '' },
-        { song: 'Peddi Reddy', urls: ['music/Peddi-Reddy-Full-Song-Bullet-Bandi-Laxman-Madeen-Sk-Naga-Durga-Leading-Boys.mp3'], image: '' },
-        { song: 'Seniga Chenla Nilabadi', urls: ['music/SENIGA CHENLA NILABADI(KoshalWorld.Com).mp3'], image: '' },
-        { song: 'Yerra Yerrani Rumalu Gatti', urls: ['music/Yerra Yerrani Rumalu Gatti.mp3'], image: '' },
-        { song: 'Daripontothundu', urls: ['music/Daripontothundu(KoshalWorld.Com).mp3'], image: '' },
-        { song: 'DEKU DEKU', urls: ['music/DEKU DEKU(KoshalWorld.Com).mp3'], image: '' },
-        { song: 'Pori Rayee Jathara', urls: ['music/Pori Rayee Jathara(KoshalWorld.Com).mp3'], image: '' },
-        { song: 'Nimmathota Vanamulo', urls: ['music/Nimmathota Vanamulo(KoshalWorld.Com).mp3'], image: '' },
-        { song: 'Ranu Bombai Ki Ranu', urls: ['music/Ranu-Bombai-Ki-Ranu-Ramu-Rathod-NaaSongs.mp3'], image: '' }
-    ]
-};
-
-function getDeletedBuiltInKey() {
-    const userId = localStorage.getItem('userId');
-    return userId ? `deletedBuiltIn_${userId}` : 'deletedBuiltIn';
-}
-
-function loadDeletedBuiltIn() {
-    try {
-        const raw = localStorage.getItem(getDeletedBuiltInKey());
-        return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
-}
-
-function saveDeletedBuiltIn(names) {
-    localStorage.setItem(getDeletedBuiltInKey(), JSON.stringify(names));
-}
-
 function getPlaylistsKey() {
     const userId = localStorage.getItem('userId');
     return userId ? `playlists_${userId}` : 'playlists';
@@ -200,14 +129,6 @@ function loadPlaylists() {
         try {
             playlists = JSON.parse(saved);
             playlistMeta = JSON.parse(savedMeta);
-            // Remove any built-in playlists the admin deleted
-            const deleted = loadDeletedBuiltIn();
-            deleted.forEach(name => {
-                if (playlistMeta[name]?.isBuiltIn) {
-                    delete playlists[name];
-                    delete playlistMeta[name];
-                }
-            });
             return;
         } catch (e) {
             console.warn('Failed to parse saved playlists:', e);
@@ -217,26 +138,8 @@ function loadPlaylists() {
     localStorage.removeItem(key);
     localStorage.removeItem(metaKey);
 
-    // First time or version update — seed default playlists
     playlists = {};
     playlistMeta = {};
-    const deleted = loadDeletedBuiltIn();
-    const coverMap = {
-        'Telugu': 'images/telugu.svg',
-        'English': 'images/english.svg',
-        'Hindi': 'images/hindi.svg',
-        'Folk': 'images/folk.svg'
-    };
-    Object.keys(defaultPlaylists).forEach(name => {
-        if (deleted.includes(name)) return;
-        playlists[name] = defaultPlaylists[name].map(s => ({ ...s }));
-        playlistMeta[name] = {
-            coverImage: coverMap[name] || '',
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            isBuiltIn: true
-        };
-    });
     savePlaylists();
 }
 
@@ -264,16 +167,12 @@ function createNewPlaylist() {
                 <div style="display:flex;gap:8px;margin-bottom:8px;">
                     <button onclick="setNewCoverSource('url')" id="newCoverSrcUrlBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:var(--accent-color);color:#000;cursor:pointer;font-weight:600;">URL</button>
                     <button onclick="setNewCoverSource('file')" id="newCoverSrcFileBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;cursor:pointer;">Upload</button>
-                    <button onclick="setNewCoverSource('path')" id="newCoverSrcPathBtn" style="flex:1;padding:6px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;cursor:pointer;">File Path</button>
                 </div>
                 <div id="newCoverUrlGroup">
                     <input type="text" id="newCoverImageUrl" placeholder="Paste image URL (e.g. https://example.com/image.jpg)" style="padding:10px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
                 </div>
                 <div id="newCoverFileGroup" style="display:none;">
                     <input type="file" id="newCoverImageFile" accept=".jpg,.jpeg,.png,.gif,.svg,.webp" style="color:#fff;width:100%;">
-                </div>
-                <div id="newCoverPathGroup" style="display:none;">
-                    <input type="text" id="newCoverImagePath" placeholder="Local file path (e.g. C:\\images\\cover.jpg)" style="padding:10px;border-radius:6px;border:1px solid #404040;background:#333;color:#fff;box-sizing:border-box;width:100%;">
                 </div>
             </div>
             ` : ''}
@@ -290,13 +189,10 @@ function createNewPlaylist() {
 function setNewCoverSource(type) {
     document.getElementById('newCoverUrlGroup').style.display = type === 'url' ? '' : 'none';
     document.getElementById('newCoverFileGroup').style.display = type === 'file' ? '' : 'none';
-    document.getElementById('newCoverPathGroup').style.display = type === 'path' ? '' : 'none';
     document.getElementById('newCoverSrcUrlBtn').style.background = type === 'url' ? 'var(--accent-color)' : '#333';
     document.getElementById('newCoverSrcUrlBtn').style.color = type === 'url' ? '#000' : '#fff';
     document.getElementById('newCoverSrcFileBtn').style.background = type === 'file' ? 'var(--accent-color)' : '#333';
     document.getElementById('newCoverSrcFileBtn').style.color = type === 'file' ? '#000' : '#fff';
-    document.getElementById('newCoverSrcPathBtn').style.background = type === 'path' ? 'var(--accent-color)' : '#333';
-    document.getElementById('newCoverSrcPathBtn').style.color = type === 'path' ? '#000' : '#fff';
 }
 
 async function submitCreatePlaylist() {
@@ -316,7 +212,6 @@ async function submitCreatePlaylist() {
     if (isAdmin) {
         const urlVisible = document.getElementById('newCoverUrlGroup') ? document.getElementById('newCoverUrlGroup').style.display !== 'none' : false;
         const fileVisible = document.getElementById('newCoverFileGroup') ? document.getElementById('newCoverFileGroup').style.display !== 'none' : false;
-        const pathVisible = document.getElementById('newCoverPathGroup') ? document.getElementById('newCoverPathGroup').style.display !== 'none' : false;
 
         if (urlVisible) {
             coverImage = document.getElementById('newCoverImageUrl').value.trim();
@@ -344,8 +239,6 @@ async function submitCreatePlaylist() {
                     return;
                 }
             }
-        } else if (pathVisible) {
-            coverImage = document.getElementById('newCoverImagePath').value.trim();
         }
     }
 
@@ -366,7 +259,6 @@ async function submitCreatePlaylist() {
                 coverImage: coverImage,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
-                isBuiltIn: false,
                 isGlobal: true,
                 globalId: data.playlist._id
             };
@@ -399,7 +291,6 @@ async function submitCreatePlaylist() {
             coverImage: coverImage,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            isBuiltIn: false,
             isGlobal: false,
             globalId: data.playlist._id
         };
@@ -432,8 +323,7 @@ async function loadGlobalPlaylists() {
         // Re-add from server
         data.forEach(p => {
             const name = p.playlistName;
-            // Don't overwrite a local non-global, non-built-in playlist with the same name
-            if (playlistMeta[name] && !playlistMeta[name].isGlobal && !playlistMeta[name].isBuiltIn) {
+            if (playlistMeta[name] && !playlistMeta[name].isGlobal) {
                 return;
             }
             playlists[name] = (p.songs || []).map(s => ({ song: s.songName, urls: [s.songUrl], image: s.songImage || '' }));
@@ -441,7 +331,6 @@ async function loadGlobalPlaylists() {
                 coverImage: p.coverImage || '',
                 createdAt: p.createdAt || new Date().toISOString(),
                 updatedAt: p.createdAt || new Date().toISOString(),
-                isBuiltIn: false,
                 isGlobal: true,
                 globalId: p._id
             };
@@ -461,7 +350,7 @@ async function loadUserPlaylists() {
         const data = await response.json();
         // Remove local entries that were previously synced as user playlists
         Object.keys(playlistMeta).forEach(name => {
-            if (playlistMeta[name]?.globalId && !playlistMeta[name]?.isGlobal && !playlistMeta[name]?.isBuiltIn) {
+            if (playlistMeta[name]?.globalId && !playlistMeta[name]?.isGlobal) {
                 delete playlists[name];
                 delete playlistMeta[name];
             }
@@ -469,7 +358,7 @@ async function loadUserPlaylists() {
         // Add from server
         data.forEach(p => {
             const name = p.playlistName;
-            if (playlistMeta[name] && (playlistMeta[name].isGlobal || playlistMeta[name].isBuiltIn)) {
+            if (playlistMeta[name] && playlistMeta[name].isGlobal) {
                 return;
             }
             playlists[name] = (p.songs || []).map(s => ({ song: s.songName, urls: [s.songUrl], image: s.songImage || '' }));
@@ -477,7 +366,6 @@ async function loadUserPlaylists() {
                 coverImage: p.coverImage || '',
                 createdAt: p.createdAt || new Date().toISOString(),
                 updatedAt: p.createdAt || new Date().toISOString(),
-                isBuiltIn: false,
                 isGlobal: false,
                 globalId: p._id
             };
@@ -491,13 +379,10 @@ async function loadUserPlaylists() {
 function setCoverSource(type) {
     document.getElementById('coverUrlGroup').style.display = type === 'url' ? '' : 'none';
     document.getElementById('coverFileGroup').style.display = type === 'file' ? '' : 'none';
-    document.getElementById('coverPathGroup').style.display = type === 'path' ? '' : 'none';
     document.getElementById('coverSrcUrlBtn').style.background = type === 'url' ? 'var(--accent-color)' : '#333';
     document.getElementById('coverSrcUrlBtn').style.color = type === 'url' ? '#000' : '#fff';
     document.getElementById('coverSrcFileBtn').style.background = type === 'file' ? 'var(--accent-color)' : '#333';
     document.getElementById('coverSrcFileBtn').style.color = type === 'file' ? '#000' : '#fff';
-    document.getElementById('coverSrcPathBtn').style.background = type === 'path' ? 'var(--accent-color)' : '#333';
-    document.getElementById('coverSrcPathBtn').style.color = type === 'path' ? '#000' : '#fff';
 }
 
 function showCreateGlobalPlaylistForm() {
@@ -506,7 +391,6 @@ function showCreateGlobalPlaylistForm() {
     document.getElementById('globalPlaylistName').value = '';
     document.getElementById('coverImageUrl').value = '';
     document.getElementById('coverImageFile').value = '';
-    document.getElementById('coverImagePath').value = '';
     setCoverSource('url');
     document.getElementById('globalPlaylistName').focus();
 }
@@ -580,7 +464,6 @@ async function createGlobalPlaylist() {
             coverImage: coverImage,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
-            isBuiltIn: false,
             isGlobal: true,
             globalId: data.playlist._id
         };
@@ -685,24 +568,18 @@ function renderPlaylists() {
     const adminStatus = localStorage.getItem('adminStatus');
     const isAdmin = adminEmail && (adminStatus === 'approved' || adminStatus === 'leader');
 
-    const builtInOrder = ['Telugu', 'English', 'Hindi', 'Folk'];
+    const playlistOrder = ["Telugu", "English", "Hindi", "Folk", "BGM's", "Devotion"];
     const allKeys = Object.keys(playlists);
     allKeys.sort((a, b) => {
-        const aIdx = builtInOrder.indexOf(a);
-        const bIdx = builtInOrder.indexOf(b);
+        const aIdx = playlistOrder.indexOf(a);
+        const bIdx = playlistOrder.indexOf(b);
         if (aIdx !== -1 && bIdx !== -1) return aIdx - bIdx;
         if (aIdx !== -1) return -1;
         if (bIdx !== -1) return 1;
-        return allKeys.indexOf(b) - allKeys.indexOf(a);
-    }).forEach(name => {
-        if (playlistMeta[name]?.isBuiltIn) {
-            const img = playlistMeta[name].coverImage || '';
-            mainHtml += `<div class="playlist" onclick="openPlaylist('${name.replace(/'/g, "\\'")}')">
-                ${img ? `<img src="${img}" alt="${name}">` : `<div class="custom-playlist-img">🎵</div>`}
-                <div class="playlist-title">${name}</div>
-            </div>`;
-            hasMain = true;
-        } else if (playlistMeta[name]?.isGlobal) {
+        return 0;
+    });
+    allKeys.forEach(name => {
+        if (playlistMeta[name]?.isGlobal) {
             const img = playlistMeta[name]?.coverImage || '';
             const safeName = name.replace(/'/g, "\\'");
             mainHtml += `<div class="playlist playlist-custom" onclick="openPlaylist('${safeName}')">
@@ -722,6 +599,21 @@ function renderPlaylists() {
             hasUser = true;
         }
     });
+
+    ['Telugu', 'English', 'Hindi', 'Folk', "BGM's", 'Devotion'].forEach(name => {
+        if (!playlists[name]) {
+            const safeName = name.replace(/'/g, "\\'");
+            mainHtml += `<div class="playlist playlist-custom" onclick="openPlaylist('${safeName}')">
+                <div class="custom-playlist-img">🎵</div>
+                <div class="playlist-title">${name}</div>
+            </div>`;
+            hasMain = true;
+        }
+    });
+
+    if (!hasMain && !hasUser) {
+        mainHtml = '<div style="color:#b3b3b3;text-align:center;padding:40px 20px;font-size:1.1em;">No songs available.</div>';
+    }
 
     if (isAdmin) {
         mainHtml += userHtml;
@@ -753,46 +645,7 @@ function renderPlaylists() {
     renderPlaylists();
     loadGlobalPlaylists();
     loadUserPlaylists();
-    syncBuiltInPlaylists();
 })();
-
-async function syncBuiltInPlaylists() {
-    const adminEmail = localStorage.getItem('email');
-    const adminStatus = localStorage.getItem('adminStatus');
-    const isAdmin = adminEmail && (adminStatus === 'approved' || adminStatus === 'leader');
-    if (!isAdmin) return;
-    try {
-        const glResp = await fetch(`${API_ROOT}/api/playlist/global`);
-        if (!glResp.ok) return;
-        const glData = await glResp.json();
-        for (const [name, meta] of Object.entries(playlistMeta)) {
-            if (!meta?.isBuiltIn) continue;
-            if (glData.some(p => p.playlistName === name)) continue;
-            const crResp = await fetch(`${API_ROOT}/api/playlist/admin-create`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminEmail, playlistName: name, coverImage: meta.coverImage || '' })
-            });
-            const crData = await crResp.json();
-            if (!crResp.ok || !crData.playlist) continue;
-            const songs = playlists[name] || [];
-            for (const s of songs) {
-                const url = s.urls?.[0];
-                if (!url || !url.trim()) continue;
-                await fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ adminEmail, playlistId: crData.playlist._id, songName: s.song, songUrl: url, songImage: s.image || '' })
-                }).catch(() => {});
-            }
-            meta.globalId = crData.playlist._id;
-            meta.isGlobal = true;
-            meta.isBuiltIn = false;
-        }
-        savePlaylists();
-        loadGlobalPlaylists();
-    } catch (e) {}
-}
 
 const savedSize = localStorage.getItem('appFontSize') || 'medium';
 applyFontSize(savedSize);
@@ -1014,23 +867,6 @@ function showRemoveSongForm() {
     });
 }
 
-function isLocalPath(str) {
-    return /^[a-zA-Z]:\\/.test(str) || str.startsWith('\\\\');
-}
-
-async function uploadLocalFileToCloudinary(adminEmail, filePath) {
-    const resp = await fetch(`${API_ROOT}/api/upload/from-path`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminEmail, filePath })
-    });
-    const data = await resp.json();
-    if (!resp.ok || !data.success) {
-        throw new Error(data.message || 'Failed to upload local file');
-    }
-    return data.url;
-}
-
 async function addSongToLibrary() {
     const container = document.getElementById('newSongPlaylistCheckboxes');
     const checkedBoxes = container.querySelectorAll('input[type=checkbox]:checked');
@@ -1056,42 +892,21 @@ async function addSongToLibrary() {
     if (isUrlMode) {
         const input = urlInput.value.trim();
         if (!input) {
-            showToast('Please paste a song link or file path.');
+            showToast('Please paste a song link.');
             return;
         }
 
-        if (isLocalPath(input)) {
-            // MODE 1: Local Windows path — upload to Cloudinary
-            showToast('Uploading local file to Cloudinary...');
-            try {
-                songUrl = await uploadLocalFileToCloudinary(adminEmail, input);
-            } catch (e) {
-                showToast('Failed to upload song: ' + e.message);
-                return;
-            }
-        } else if (input.startsWith('http://') || input.startsWith('https://')) {
-            // MODE 3: HTTPS URL — store directly
-            songUrl = input;
-        } else {
-            showToast('Please provide a valid HTTPS URL or a local file path.');
+        if (!input.startsWith('http://') && !input.startsWith('https://')) {
+            showToast('Please provide a valid http:// or https:// URL.');
             return;
         }
+        songUrl = input;
 
-        // Handle image for URL/local-path mode
         const isImgUrlMode = document.getElementById('songImageUrlGroup').style.display !== 'none';
         if (isImgUrlMode) {
             const imgInput = document.getElementById('newSongImageUrl').value.trim();
             if (imgInput) {
-                if (isLocalPath(imgInput)) {
-                    try {
-                        songImage = await uploadLocalFileToCloudinary(adminEmail, imgInput);
-                    } catch (e) {
-                        showToast('Failed to upload image: ' + e.message);
-                        return;
-                    }
-                } else {
-                    songImage = imgInput;
-                }
+                songImage = imgInput;
             }
         } else {
             const imgFile = document.getElementById('newSongImageFile').files[0];
@@ -1099,7 +914,6 @@ async function addSongToLibrary() {
                 const imgFormData = new FormData();
                 imgFormData.append('image', imgFile);
                 try {
-                    console.log('Uploading image to Cloudinary...');
                     const imgResp = await fetch(`${API_ROOT}/api/upload`, {
                         method: 'POST',
                         body: imgFormData
@@ -1108,10 +922,8 @@ async function addSongToLibrary() {
                     try {
                         imgData = await imgResp.json();
                     } catch (jsonErr) {
-                        console.error('Image upload JSON parse error:', jsonErr);
                         imgData = { success: false, message: 'Empty server response' };
                     }
-                    console.log('Image upload response:', imgResp.status, imgData);
                     if (imgResp.ok && imgData.success && imgData.imageUrl) {
                         songImage = imgData.imageUrl;
                     } else {
@@ -1224,65 +1036,10 @@ async function addSongToLibrary() {
         }
     }
 
+    let lastAddedPlaylist = '';
     for (const cb of checkedBoxes) {
         const playlistName = cb.value;
-
-        // For built-in playlists, admin changes must sync to server
-        if (playlistMeta[playlistName]?.isBuiltIn && isAdmin) {
-            try {
-                console.log('Syncing built-in playlist to server:', playlistName);
-                const glResp = await fetch(`${API_ROOT}/api/playlist/global`);
-                if (glResp.ok) {
-                    let glData;
-                    try {
-                        glData = await glResp.json();
-                    } catch (jsonErr) {
-                        console.error('glResp.json() parse error:', jsonErr);
-                        glData = [];
-                    }
-                    let glEntry = glData.find(p => p.playlistName === playlistName);
-                    if (!glEntry) {
-                        const crResp = await fetch(`${API_ROOT}/api/playlist/admin-create`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ adminEmail, playlistName, coverImage: playlistMeta[playlistName].coverImage || '' })
-                        });
-                        let crData;
-                        try {
-                            crData = await crResp.json();
-                        } catch (jsonErr) {
-                            console.error('crResp.json() parse error:', jsonErr);
-                            crData = {};
-                        }
-                        console.log('admin-create response:', crResp.status, crData);
-                        if (crResp.ok && crData.playlist) {
-                            glEntry = crData.playlist;
-                            const existingSongs = playlists[playlistName] || [];
-                            for (const s of existingSongs) {
-                                const url = s.urls?.[0];
-                                if (!url || !url.trim()) continue;
-                                try {
-                                    await fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ adminEmail, playlistId: glEntry._id, songName: s.song, songUrl: url, songImage: s.image || '' })
-                                    });
-                                } catch (e) {
-                                    console.error('Failed to sync existing song:', s.song, e);
-                                }
-                            }
-                        }
-                    }
-                    if (glEntry) {
-                        playlistMeta[playlistName].globalId = glEntry._id;
-                        playlistMeta[playlistName].isGlobal = true;
-                        playlistMeta[playlistName].isBuiltIn = false;
-                    }
-                }
-            } catch (e) {
-                console.error('Built-in playlist sync error:', e);
-            }
-        }
+        lastAddedPlaylist = playlistName;
 
         const pArr = playlists[playlistName];
         if (pArr) {
@@ -1298,6 +1055,25 @@ async function addSongToLibrary() {
     document.getElementById('newSongFile').value = '';
     document.getElementById('newSongImageUrl').value = '';
     document.getElementById('newSongImageFile').value = '';
+
+    // Refresh song list if viewing the affected playlist
+    if (lastAddedPlaylist && document.getElementById('songsSection').style.display === 'block') {
+        openPlaylist(currentPlaylistName);
+    }
+
+    // Auto-play the newly added song
+    if (songUrl && title) {
+        const targetPlaylist = playlists[lastAddedPlaylist];
+        if (targetPlaylist) {
+            const idx = targetPlaylist.findIndex(s => s.song === title);
+            if (idx !== -1) {
+                currentQueue = targetPlaylist;
+                currentQueueIndex = idx;
+                currentPlaylistName = lastAddedPlaylist;
+                playSong(title, [songUrl], songImage);
+            }
+        }
+    }
 }
 
 async function removeSongFromLibrary() {
@@ -1314,49 +1090,12 @@ async function removeSongFromLibrary() {
     savePlaylists();
     // Remove from shared playlists via API
     const adminEmail = localStorage.getItem('email');
-    const adminStatus = localStorage.getItem('adminStatus');
-    const isAdmin = adminEmail && (adminStatus === 'approved' || adminStatus === 'leader');
     for (const [name, meta] of Object.entries(playlistMeta)) {
-        if (meta?.isBuiltIn && isAdmin) {
-            try {
-                const glResp = await fetch(`${API_ROOT}/api/playlist/global`);
-                if (glResp.ok) {
-                    const glData = await glResp.json();
-                    let glEntry = glData.find(p => p.playlistName === name);
-                    if (!glEntry) {
-                        const crResp = await fetch(`${API_ROOT}/api/playlist/admin-create`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ adminEmail, playlistName: name, coverImage: meta.coverImage || '' })
-                        });
-                        const crData = await crResp.json();
-                        if (crResp.ok && crData.playlist) {
-                            glEntry = crData.playlist;
-                            const existingSongs = playlists[name] || [];
-                            for (const s of existingSongs) {
-                                const url = s.urls?.[0];
-                                if (!url || !url.trim()) continue;
-                                await fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ adminEmail, playlistId: glEntry._id, songName: s.song, songUrl: url, songImage: s.image || '' })
-                                }).catch(() => {});
-                            }
-                        }
-                    }
-                    if (glEntry) {
-                        playlistMeta[name].globalId = glEntry._id;
-                        playlistMeta[name].isGlobal = true;
-                        playlistMeta[name].isBuiltIn = false;
-                    }
-                }
-            } catch (e) {}
-        }
-        if ((meta?.isGlobal || playlistMeta[name]?.isGlobal) && playlistMeta[name]?.globalId) {
+        if (meta?.isGlobal && meta?.globalId) {
             fetch(`${API_ROOT}/api/playlist/admin-remove-song`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ adminEmail, playlistId: playlistMeta[name].globalId, songName })
+                body: JSON.stringify({ adminEmail, playlistId: meta.globalId, songName })
             }).catch(() => {});
         }
     }
@@ -1521,7 +1260,7 @@ function playAllPlaylistSongs() {
 }
 
 function renameCurrentPlaylist() {
-    const customNames = Object.keys(playlists).filter(name => !playlistMeta[name]?.isBuiltIn && !playlistMeta[name]?.isGlobal);
+    const customNames = Object.keys(playlists).filter(name => !playlistMeta[name]?.isGlobal);
     if (customNames.length === 0) {
         showToast('No custom playlists to rename.');
         return;
@@ -1564,8 +1303,8 @@ function confirmRename(oldName) {
         showToast('A playlist with that name already exists.');
         return;
     }
-    if (playlistMeta[oldName]?.isBuiltIn) {
-        showToast('Cannot rename a built-in playlist.');
+    if (playlistMeta[oldName]?.isGlobal) {
+        showToast('Cannot rename a shared playlist.');
         return;
     }
     playlists[newName] = playlists[oldName];
@@ -1585,7 +1324,7 @@ function showPlaylistDetails() {
         const meta = playlistMeta[name];
         const songs = playlists[name];
         const count = songs ? songs.length : 0;
-        const type = meta?.isBuiltIn ? 'Built-in' : 'Custom';
+        const type = meta?.isGlobal ? 'Global' : 'Custom';
         const created = meta?.createdAt ? new Date(meta.createdAt).toLocaleDateString() : 'N/A';
         const updated = meta?.updatedAt ? new Date(meta.updatedAt).toLocaleDateString() : 'N/A';
         const cover = meta?.coverImage || '';
@@ -1625,7 +1364,6 @@ function deleteCurrentPlaylist() {
     const adminStatus = localStorage.getItem('adminStatus');
     const isAdmin = adminStatus === 'approved' || adminStatus === 'leader';
     const customNames = Object.keys(playlists).filter(name => {
-        if (playlistMeta[name]?.isBuiltIn) return false;
         if (playlistMeta[name]?.isGlobal && !isAdmin) return false;
         return true;
     });
@@ -1697,26 +1435,6 @@ async function confirmDelete(name) {
     const adminStatus = localStorage.getItem('adminStatus');
     const isAdmin = adminEmail && (adminStatus === 'approved' || adminStatus === 'leader');
 
-    if (playlistMeta[name]?.isBuiltIn) {
-        if (!isAdmin) {
-            showToast('Cannot delete a built-in playlist.');
-            return;
-        }
-        // Admin can delete built-in — persist deleted state
-        const deleted = loadDeletedBuiltIn();
-        if (!deleted.includes(name)) {
-            deleted.push(name);
-            saveDeletedBuiltIn(deleted);
-        }
-        delete playlists[name];
-        delete playlistMeta[name];
-        if (currentPlaylistName === name) currentPlaylistName = '';
-        savePlaylists();
-        renderPlaylists();
-        document.getElementById('playlistActionModal').style.display = 'none';
-        showToast('Playlist "' + name + '" deleted.');
-        return;
-    }
     if (playlistMeta[name]?.isGlobal) {
         if (!isAdmin) {
             showToast('This is a shared playlist and cannot be deleted.');
@@ -1775,7 +1493,7 @@ function showPlaylistPickerModal(title, callback, excludeBuiltIn) {
 
     let names = Object.keys(playlists);
     if (excludeBuiltIn) {
-        names = names.filter(name => !playlistMeta[name]?.isBuiltIn);
+        names = names.filter(name => !playlistMeta[name]?.isGlobal);
     }
 
     if (names.length === 0) {
@@ -2362,10 +2080,13 @@ function confirmLogout() {
 // Open playlist and show songs
 function openPlaylist(playlistName) {
     currentPlaylistName = playlistName;
-    currentQueue = playlists[playlistName];
+    currentQueue = playlists[playlistName] || [];
     document.getElementById('playlistTitle').innerText = playlistName;
     const songList = document.getElementById('songList');
     songList.innerHTML = '';
+    if (currentQueue.length === 0) {
+        songList.innerHTML = '<div style="color:#b3b3b3;text-align:center;padding:40px 20px;font-size:1.1em;">No songs available.</div>';
+    } else {
     currentQueue.forEach((songObj, index) => {
         const wrapper = document.createElement('div');
         wrapper.className = 'song-wrapper';
@@ -2401,6 +2122,7 @@ function openPlaylist(playlistName) {
 
         songList.appendChild(wrapper);
     });
+    }
 
     document.getElementById('playlistSection').style.display = 'none';
     document.getElementById('songsSection').style.display = 'block';
@@ -2415,7 +2137,7 @@ function populatePlaylistList(container, songObj) {
     const allNames = Object.keys(playlists);
     let hasCustom = false;
     allNames.forEach(name => {
-        if (playlistMeta[name]?.isBuiltIn || playlistMeta[name]?.isGlobal) return;
+        if (playlistMeta[name]?.isGlobal) return;
         hasCustom = true;
         const item = document.createElement('div');
         item.className = 'menu-item';
@@ -2474,7 +2196,7 @@ function renderPlaylistPicker() {
     container.innerHTML = '';
     let hasCustom = false;
     Object.keys(playlists).forEach(name => {
-        if (playlistMeta[name]?.isBuiltIn || playlistMeta[name]?.isGlobal) return;
+        if (playlistMeta[name]?.isGlobal) return;
         hasCustom = true;
         const item = document.createElement('div');
         item.className = 'playlist-picker-item';
@@ -2519,7 +2241,6 @@ function handleCreatePlaylist() {
         coverImage: '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        isBuiltIn: false
     };
     savePlaylists();
     renderPlaylists();
@@ -2593,10 +2314,9 @@ function showSongMenu(songObj, anchorBtn) {
     const adminEmail = localStorage.getItem('email');
     const isAdmin = adminEmail && (localStorage.getItem('adminStatus') === 'approved' || localStorage.getItem('adminStatus') === 'leader');
     const removeBtn = document.getElementById('removeFromPlaylistBtn');
-    const isCustom = currentPlaylistName && !playlistMeta[currentPlaylistName]?.isBuiltIn && !playlistMeta[currentPlaylistName]?.isGlobal;
+    const isCustom = currentPlaylistName && !playlistMeta[currentPlaylistName]?.isGlobal;
     const isGlobal = currentPlaylistName && playlistMeta[currentPlaylistName]?.isGlobal;
-    const isBuiltIn = currentPlaylistName && playlistMeta[currentPlaylistName]?.isBuiltIn;
-    removeBtn.style.display = (isCustom || (isGlobal && isAdmin) || (isBuiltIn && isAdmin)) ? 'block' : 'none';
+    removeBtn.style.display = (isCustom || (isGlobal && isAdmin)) ? 'block' : 'none';
 
     const dropdown = document.getElementById('songMenuDropdown');
     const rect = anchorBtn.getBoundingClientRect();
@@ -2617,7 +2337,7 @@ function populateSongPlaylistList(container) {
     const allNames = Object.keys(playlists);
     let hasCustom = false;
     allNames.forEach(name => {
-        if (playlistMeta[name]?.isBuiltIn || playlistMeta[name]?.isGlobal) return;
+        if (playlistMeta[name]?.isGlobal) return;
         hasCustom = true;
         const item = document.createElement('div');
         item.className = 'menu-item';
@@ -2679,7 +2399,7 @@ function populateFsPlaylistList(container) {
     const allNames = Object.keys(playlists);
     let hasCustom = false;
     allNames.forEach(name => {
-        if (playlistMeta[name]?.isBuiltIn || playlistMeta[name]?.isGlobal) return;
+        if (playlistMeta[name]?.isGlobal) return;
         hasCustom = true;
         const item = document.createElement('div');
         item.className = 'menu-item';
@@ -2784,7 +2504,7 @@ function populateMiniPlaylistList(container) {
     const allNames = Object.keys(playlists);
     let hasCustom = false;
     allNames.forEach(name => {
-        if (playlistMeta[name]?.isBuiltIn || playlistMeta[name]?.isGlobal) return;
+        if (playlistMeta[name]?.isGlobal) return;
         hasCustom = true;
         const item = document.createElement('div');
         item.className = 'menu-item';
@@ -2837,7 +2557,7 @@ function addSongToPlaylist(songObj, playlistName) {
         // Sync to server for user playlists
         const meta = playlistMeta[playlistName];
         const userId = localStorage.getItem('userId');
-        if (meta?.globalId && !meta?.isGlobal && !meta?.isBuiltIn && userId) {
+        if (meta?.globalId && !meta?.isGlobal && userId) {
             const url = songObj.urls?.[0];
             if (!url || !url.trim()) return;
             fetch(`${API_ROOT}/api/playlist/user-add-song`, {
@@ -2852,14 +2572,6 @@ function addSongToPlaylist(songObj, playlistName) {
 
 function showDeleteSongConfirmation() {
     if (!pendingSongForPlaylist || !currentPlaylistName) return;
-    if (playlistMeta[currentPlaylistName]?.isBuiltIn) {
-        const adminStatus = localStorage.getItem('adminStatus');
-        const isAdmin = adminStatus === 'approved' || adminStatus === 'leader';
-        if (!isAdmin) {
-            showToast('Cannot edit a built-in playlist.');
-            return;
-        }
-    }
     const songName = pendingSongForPlaylist.song;
     const modal = document.getElementById('playlistActionModal');
     document.getElementById('playlistActionTitle').textContent = '🗑️ Delete Song';
@@ -2897,47 +2609,6 @@ async function confirmDeleteSong() {
         meta
     });
 
-    // For built-in playlists, sync to server first if admin
-    if (meta?.isBuiltIn && isAdmin) {
-        console.log('[DELETE SONG] Syncing built-in playlist to server');
-        try {
-            const glResp = await fetch(`${API_ROOT}/api/playlist/global`);
-            if (glResp.ok) {
-                const glData = await glResp.json();
-                let glEntry = glData.find(p => p.playlistName === currentPlaylistName);
-                if (!glEntry) {
-                    console.log('[DELETE SONG] Creating global playlist for built-in:', currentPlaylistName);
-                    const crResp = await fetch(`${API_ROOT}/api/playlist/admin-create`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ adminEmail, playlistName: currentPlaylistName, coverImage: meta.coverImage || '' })
-                    });
-                    const crData = await crResp.json();
-                    if (crResp.ok && crData.playlist) {
-                        glEntry = crData.playlist;
-                        const existingSongs = playlists[currentPlaylistName] || [];
-                        for (const s of existingSongs) {
-                            const url = s.urls?.[0];
-                            if (!url || !url.trim()) continue;
-                            await fetch(`${API_ROOT}/api/playlist/admin-add-song-url`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ adminEmail, playlistId: glEntry._id, songName: s.song, songUrl: url, songImage: s.image || '' })
-                            }).catch(() => {});
-                        }
-                    }
-                }
-                if (glEntry) {
-                    playlistMeta[currentPlaylistName].globalId = glEntry._id;
-                    playlistMeta[currentPlaylistName].isGlobal = true;
-                    playlistMeta[currentPlaylistName].isBuiltIn = false;
-                }
-            }
-        } catch (e) {
-            console.error('[DELETE SONG] Built-in sync error:', e);
-        }
-    }
-
     const updatedMeta = playlistMeta[currentPlaylistName];
     let success = false;
 
@@ -2967,12 +2638,9 @@ async function confirmDeleteSong() {
                 console.error('[DELETE SONG] Request failed (deleting locally anyway):', e);
                 success = true;
             }
-                } else {
-                    console.warn('[DELETE SONG] Backend returned error:', data.message);
-                    success = true;
-                }
+        }
 
-    } else if (updatedMeta?.globalId && !updatedMeta?.isBuiltIn) {
+    } else if (updatedMeta?.globalId) {
         const playlistId = updatedMeta.globalId;
         const url = `${API_ROOT}/api/playlist/user-remove-song`;
         const body = { userId, playlistId, songName };
@@ -3104,9 +2772,53 @@ function playSong(songTitle, songUrls, songImage) {
     currentSongTitle = songTitle || '';
     updateHeartButton();
 
-    const url = songUrls[0];
+    const url = songUrls && songUrls[0];
+    if (!url) {
+        showToast(`No URL for "${songTitle}".`);
+        return;
+    }
 
-    if (url.startsWith('/') || url.startsWith('music/') || url.match(/\.(mp3|mpeg|wav|ogg|aac|flac|webm)$/i)) {
+    const isSoundCloud = url.includes('soundcloud.com') || url.includes('soundcloud.app.goog.gl');
+
+    if (isSoundCloud) {
+        if (!soundCloudWidget) {
+            document.getElementById('soundCloudPlayer').innerHTML = `<iframe id="scWidget" scrolling="no" frameborder="no"
+                    src="https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&amp;auto_play=true&amp;hide_related=true&amp;visual=false&amp;show_comments=false&amp;show_user=false&amp;show_reposts=false&amp;show_teaser=false&amp;liking=false&amp;sharing=false">
+            </iframe>`;
+            const iframe = document.getElementById('scWidget');
+            iframe.onload = () => {
+                soundCloudWidget = SC.Widget(iframe);
+                soundCloudWidget.bind(SC.Widget.Events.READY, () => {
+                    soundCloudWidget.play();
+                    isPlaying = true;
+                    updatePlayPauseButtons();
+                });
+                soundCloudWidget.bind(SC.Widget.Events.FINISH, () => {
+                    isPlaying = false;
+                    updatePlayPauseButtons();
+                    playNextInQueue();
+                });
+            };
+            updateMiniPlayer(songTitle, songImage);
+            showMiniPlayer();
+        } else {
+            soundCloudWidget.load(url, {
+                auto_play: true,
+                show_comments: false,
+                show_user: false,
+                show_reposts: false,
+                show_teaser: false,
+                liking: false,
+                sharing: false,
+                visual: false,
+                hide_related: true
+            });
+            isPlaying = true;
+            updatePlayPauseButtons();
+            updateMiniPlayer(songTitle, songImage);
+            showMiniPlayer();
+        }
+    } else {
         const soundCloudPlayer = document.getElementById('soundCloudPlayer');
         soundCloudPlayer.innerHTML = '';
         hiddenAudio.src = url;
@@ -3150,42 +2862,6 @@ function playSong(songTitle, songUrls, songImage) {
             updatePlayPauseButtons();
             showToast(`Cannot play "${songTitle}". The file may be missing or the link may not support direct playback.`);
         });
-    } else if (!soundCloudWidget) {
-        document.getElementById('soundCloudPlayer').innerHTML = `<iframe id="scWidget" scrolling="no" frameborder="no"
-                src="https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&amp;auto_play=true&amp;hide_related=true&amp;visual=false&amp;show_comments=false&amp;show_user=false&amp;show_reposts=false&amp;show_teaser=false&amp;liking=false&amp;sharing=false">
-        </iframe>`;
-        const iframe = document.getElementById('scWidget');
-        iframe.onload = () => {
-            soundCloudWidget = SC.Widget(iframe);
-            soundCloudWidget.bind(SC.Widget.Events.READY, () => {
-                soundCloudWidget.play();
-                isPlaying = true;
-                updatePlayPauseButtons();
-            });
-            soundCloudWidget.bind(SC.Widget.Events.FINISH, () => {
-                isPlaying = false;
-                updatePlayPauseButtons();
-                playNextInQueue();
-            });
-        };
-        updateMiniPlayer(songTitle, songImage);
-        showMiniPlayer();
-    } else {
-        soundCloudWidget.load(url, {
-            auto_play: true,
-            show_comments: false,
-            show_user: false,
-            show_reposts: false,
-            show_teaser: false,
-            liking: false,
-            sharing: false,
-            visual: false,
-            hide_related: true
-        });
-        isPlaying = true;
-        updatePlayPauseButtons();
-        updateMiniPlayer(songTitle, songImage);
-        showMiniPlayer();
     }
 
     const songName = songTitle || 'Unknown song';
