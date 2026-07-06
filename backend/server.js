@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const authRoutes = require('./routes/auth');
 const playlistRoutes = require('./routes/playlist');
 const uploadRoutes = require('./routes/upload'); // NEW
+const Playlist = require('./models/Playlist');
 
 const connectDB = require('./database');
 const User = require('./models/User');
@@ -146,10 +147,48 @@ async function ensureAdminLeader() {
   }
 }
 
+async function seedDefaultPlaylists() {
+  const admin = await User.findOne({ adminStatus: 'leader' });
+  if (!admin) return;
+
+  const defaults = [
+    { name: 'Telugu', image: '/images/telugu.svg' },
+    { name: 'English', image: '/images/english.svg' },
+    { name: 'Hindi', image: '/images/hindi.svg' },
+    { name: 'Folk', image: '/images/folk.svg' },
+    { name: "BGM's", image: '/images/bgm.svg' },
+    { name: 'Devotion', image: '/images/devotion.svg' },
+  ];
+
+  for (const def of defaults) {
+    const existing = await Playlist.findOne({ playlistName: def.name, isGlobal: true });
+    if (existing) {
+      if (!existing.coverImage) {
+        await Playlist.findOneAndUpdate(
+          { _id: existing._id },
+          { coverImage: def.image }
+        );
+        console.log(`Updated cover image for default playlist: ${def.name}`);
+      }
+    } else {
+      await new Playlist({
+        userId: admin._id,
+        playlistName: def.name,
+        songs: [],
+        isGlobal: true,
+        createdByAdmin: admin.email,
+        coverImage: def.image,
+      }).save();
+      console.log(`Created default playlist: ${def.name}`);
+    }
+  }
+}
+
 // Connect DB and start server
 connectDB()
     .then(async () => {
         await ensureAdminLeader();
+        await seedDefaultPlaylists();
         app.listen(PORT, '0.0.0.0', () => {
             console.log(`Server running on port ${PORT}`);
             console.log(

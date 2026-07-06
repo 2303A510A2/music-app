@@ -116,6 +116,15 @@ function getPlaylistMetaKey() {
     return userId ? `playlistMeta_${userId}` : 'playlistMeta';
 }
 
+const DEFAULT_COVER_IMAGES = {
+  'telugu': '/images/telugu.svg',
+  'english': '/images/english.svg',
+  'hindi': '/images/hindi.svg',
+  'folk': '/images/folk.svg',
+  "bgm's": '/images/bgm.svg',
+  'devotion': '/images/devotion.svg',
+};
+
 const PLAYLIST_VERSION = 3;
 
 function loadPlaylists() {
@@ -589,19 +598,20 @@ function renderPlaylists() {
         const isGlobal = playlistMeta[name]?.isGlobal;
         const canShowDots = isAdmin || !isGlobal;
         const img = playlistMeta[name]?.coverImage || '';
+        const displayImg = img || DEFAULT_COVER_IMAGES[name.toLowerCase()] || '';
         const safeName = name.replace(/'/g, "\\'");
         const dotsHtml = canShowDots ? `<button class="playlist-dots" onclick="event.stopPropagation(); showPlaylistCardMenu('${safeName}', this)" title="More">⋮</button>` : '';
 
         if (isGlobal) {
             mainHtml += `<div class="playlist playlist-custom" onclick="openPlaylist('${safeName}')">
-                ${img ? `<img src="${img}" alt="${name}">` : `<div class="custom-playlist-img">🎵</div>`}
+                ${displayImg ? `<img src="${displayImg}" alt="${name}">` : `<div class="custom-playlist-img">🎵</div>`}
                 <div class="playlist-title">${name}</div>
                 ${dotsHtml}
             </div>`;
             hasMain = true;
         } else {
             userHtml += `<div class="playlist playlist-custom" onclick="openPlaylist('${safeName}')">
-                ${img ? `<img src="${img}" alt="${name}">` : `<div class="custom-playlist-img">🎵</div>`}
+                ${displayImg ? `<img src="${displayImg}" alt="${name}">` : `<div class="custom-playlist-img">🎵</div>`}
                 <div class="playlist-title">${name}</div>
                 ${dotsHtml}
             </div>`;
@@ -612,9 +622,12 @@ function renderPlaylists() {
     FIXED_FIRST.concat(ALWAYS_LAST).forEach(name => {
         if (!playlists[name]) {
             const safeName = name.replace(/'/g, "\\'");
+            const defImg = DEFAULT_COVER_IMAGES[name.toLowerCase()] || '';
+            const dotsHtml = isAdmin ? `<button class="playlist-dots" onclick="event.stopPropagation(); showPlaylistCardMenu('${safeName}', this)" title="More">⋮</button>` : '';
             mainHtml += `<div class="playlist playlist-custom" onclick="openPlaylist('${safeName}')">
-                <div class="custom-playlist-img">🎵</div>
+                ${defImg ? `<img src="${defImg}" alt="${name}">` : `<div class="custom-playlist-img">🎵</div>`}
                 <div class="playlist-title">${name}</div>
+                ${dotsHtml}
             </div>`;
             hasMain = true;
         }
@@ -1451,8 +1464,8 @@ function showPlaylistCardMenu(name, btn) {
         removeItem.style.display = '';
         deleteItem.style.display = '';
     } else {
-        // User: can only rename/delete their own (non-global) playlists
-        renameItem.style.display = isGlobal ? 'none' : '';
+        // Regular users: only see Delete on their own (non-global) playlists
+        renameItem.style.display = 'none';
         addItem.style.display = 'none';
         removeItem.style.display = 'none';
         deleteItem.style.display = isGlobal ? 'none' : '';
@@ -1571,6 +1584,19 @@ async function confirmDelete(name) {
         return;
     }
     // Regular custom playlist deletion
+    const userId = localStorage.getItem('userId');
+    const playlistId = playlistMeta[name]?.globalId;
+    if (userId && playlistId) {
+        try {
+            await fetch(`${API_ROOT}/api/playlist/user-delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, playlistId })
+            });
+        } catch (e) {
+            // Server unreachable — continue with local delete
+        }
+    }
     delete playlists[name];
     delete playlistMeta[name];
     if (currentPlaylistName === name) currentPlaylistName = '';
