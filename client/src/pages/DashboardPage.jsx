@@ -37,6 +37,13 @@ export default function DashboardPage() {
     loadRecentSongs();
   }, [user, navigate]);
 
+  useEffect(() => {
+    if (!selectedPlaylist) return;
+    const handlePopState = () => { goHome(); };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedPlaylist]);
+
   const loadPlaylists = async () => {
     try {
       const res = await playlistAPI.getGlobalPlaylists();

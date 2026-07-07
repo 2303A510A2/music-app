@@ -17,7 +17,7 @@ export default function LoginPage() {
     try {
       const res = await authAPI.login(email, password);
       login(res.data);
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(true);
       setMessage(err.response?.data?.message || 'Connection error. Check if server is running.');
