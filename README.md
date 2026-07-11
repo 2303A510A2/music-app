@@ -2,6 +2,11 @@
 
 A full-stack music playlist application with user authentication and database storage.
 
+## Deployment Links
+
+- GitHub Actions: https://github.com/2303A510A2/music-app/actions/runs/28709783009
+- Render Deployment: https://music-app-4-dpnc.onrender.com
+
 ## Features
 
 - **User Authentication**: Register and login with email and password
